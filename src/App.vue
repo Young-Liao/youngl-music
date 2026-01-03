@@ -1,21 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import MusicPicker from "./components/music-picker.vue";
-
-const selected = ref<string | null>(null);
-
-const handleSelection = (path: string) => {
-    console.log("Chose: ", path);
-    selected.value = path;
-}
+import AudioPlayback from "./pages/audio-playback.vue";
 
 </script>
 
 <template>
-    <main class="container">
-        <MusicPicker @file-selected="handleSelection" />
-    </main>
+<main class="container">
+    <AudioPlayback />
+</main>
 </template>
 
 <style scoped>

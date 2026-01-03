@@ -3,9 +3,10 @@ import { open } from '@tauri-apps/plugin-dialog';
 
 const emit = defineEmits(['fileSelected'])
 
-async function selectMusic() {
+/// This function opens the explorer and lets the user to choose an audio file to play.
+async function selectAudio() {
     const files = await open({
-        multiple: true,
+        multiple: false,
         filters: [{
             name: 'Audio',
             extensions: ['mp3', 'wav', "flac"]
@@ -18,5 +19,5 @@ async function selectMusic() {
 </script>
 
 <template>
-    <button @click="selectMusic">Choose a Song</button>
+<button @click="selectAudio">Choose a Song</button>
 </template>
