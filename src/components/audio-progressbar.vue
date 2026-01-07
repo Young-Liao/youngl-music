@@ -11,18 +11,7 @@
 </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
-import { invoke } from "@tauri-apps/api/core"
-import { listen } from "@tauri-apps/api/event"
-
-const currentTime = ref(0);
-const totalDuration = ref(0);
-
-async function updateProgress() {
-    const stats = await invoke<{position: number, duration: number}>('get_playback_progress'); 
-    currentTime.value = stats.position;
-    totalDuration.value = stats.duration;
-}
+import { currentTime, isPaused, totalDuration } from "../scripts/globals";
 
 const formatTime = (time: number) => {
     const seconds = Math.floor(time % 60);
@@ -40,13 +29,5 @@ const formatTime = (time: number) => {
         return MM_SS;
     }
 }
-
-onMounted(async () => {
-    /// Start the Timer
-    setInterval(updateProgress, 1000);
-    const unlisten = await listen('playback-finished', () => {
-        currentTime.value = 0;
-    })
-})
 
 </script>
