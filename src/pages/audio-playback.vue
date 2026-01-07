@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import AudioPicker from "../components/audio-picker.vue";
 import AudioProgressbar from "../components/audio-progressbar.vue";
-import { handleSongPlayback, handleToggle, isPaused } from "../components/audio-player.vue";
-
+import { handleSongPlayback, handleToggle } from "../components/audio-player.vue";
+import { isPaused, currentTime } from "../scripts/globals"
+import { listen } from "@tauri-apps/api/event"
+import { stopProgressCollection } from "../scripts/progress-collector";
 
 const selected = ref<string | null>(null);
 
@@ -13,6 +15,15 @@ const handleSelection = (path: string) => {
     selected.value = path;
     handleSongPlayback(selected.value);
 }
+
+onMounted(async () => {
+    /// Stop the timer when the playback is done.
+    await listen('playback-finished', () => {
+        stopProgressCollection();
+        currentTime.value = 0;
+        isPaused.value = true;
+    })
+})
 
 </script>
 
