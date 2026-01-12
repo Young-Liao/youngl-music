@@ -1,7 +1,8 @@
 <script lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import { isPaused } from "../scripts/globals";
+import {isPaused, noAudio} from "../scripts/globals";
 import { startProgressCollection, stopProgressCollection } from "../scripts/progress-collector";
+import {emit} from "@tauri-apps/api/event";
 
 /// This function asks Rust to play the audio
 export async function handleSongPlayback(path: String) {
@@ -17,6 +18,14 @@ export async function handleSongPlayback(path: String) {
 
 /// This function asks Rust to play/pause the audio
 export async function handleToggle() {
+    if (noAudio.value) {
+        console.log("No audio...");
+        await emit('need-file-selection');
+    }
+    // Canceled selection
+    if (noAudio.value) {
+        return;
+    }
     try {
         isPaused.value = await invoke('toggle_playback', { });
         stopProgressCollection();

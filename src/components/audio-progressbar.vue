@@ -1,7 +1,7 @@
 <template>
 <div class="progress_container">
     <input
-        type="range"
+        type="range",
         min="0"
         :max="totalDuration"
         :value="currentTime"
@@ -11,7 +11,7 @@
 </div>
 </template>
 <script setup lang="ts">
-import { currentTime, totalDuration } from "../scripts/globals";
+import { currentTime, isPaused, totalDuration } from "../scripts/globals";
 
 const formatTime = (time: number) => {
     const seconds = Math.floor(time % 60);
