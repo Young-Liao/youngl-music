@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core"
-import { currentTime, isPaused, totalDuration } from "../scripts/globals";
+import { currentTime, totalDuration } from "./globals.ts";
 
 let progressCollector: any = null;
 

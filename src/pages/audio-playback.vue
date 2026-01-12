@@ -3,7 +3,7 @@ import { onMounted, ref } from "vue";
 import AudioPicker from "../components/audio-picker.vue";
 import AudioProgressbar from "../components/audio-progressbar.vue";
 import { handleSongPlayback, handleToggle } from "../components/audio-player.vue";
-import { isPaused, currentTime } from "../scripts/globals"
+import {isPaused, currentTime, noAudio} from "../scripts/globals"
 import { listen } from "@tauri-apps/api/event"
 import { stopProgressCollection } from "../scripts/progress-collector";
 
@@ -18,10 +18,11 @@ const handleSelection = (path: string) => {
 
 onMounted(async () => {
     /// Stop the timer when the playback is done.
-    const unlisten = await listen('playback-finished', () => {
+    await listen('playback-finished', () => {
         stopProgressCollection();
         currentTime.value = 0;
         isPaused.value = true;
+        noAudio.value = true;
     })
 })
 
