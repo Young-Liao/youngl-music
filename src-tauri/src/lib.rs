@@ -13,6 +13,7 @@ pub fn run() {
             utils::audio::play_song,
             utils::audio::toggle_playback,
             utils::audio::get_playback_progress,
+            utils::audio::seek_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

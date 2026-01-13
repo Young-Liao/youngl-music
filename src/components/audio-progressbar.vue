@@ -1,18 +1,109 @@
 <template>
-<div class="progress_container">
-    <input
-        type="range",
-        min="0"
-        :max="totalDuration"
-        :value="currentTime"
-        class="from-range"  
-    />
-    <span>{{ formatTime(currentTime) }} / {{ formatTime(totalDuration) }}</span>
-</div>
-</template>
-<script setup lang="ts">
-import { currentTime, isPaused, totalDuration } from "../scripts/globals";
+    <div class="nyx-player-bar" :class="{ 'is-dragging': isDragging }">
+        <div
+            class="scrub-container"
+            ref="progressBar"
+            @mousedown="startScrub"
+            @mouseenter="showHover = true"
+            @mouseleave="showHover = false"
+            @mousemove="updateHoverTime"
+        >
+            <div class="track-base">
+                <div class="track-fill" :style="{ width: progressPercent + '%' }"></div>
+                <div class="track-handle" :style="{ left: progressPercent + '%' }">
+                    <div class="handle-glow"></div>
+                </div>
+                <div v-show="showHover" class="track-hover" :style="{ width: hoverPercent + '%' }"></div>
+            </div>
 
+            <div
+                v-show="showHover || isDragging"
+                class="floating-time"
+                :style="{ left: (isDragging ? progressPercent : hoverPercent) + '%' }"
+            >
+                {{ formatTime(isDragging ? currentTime : hoverTime) }}
+            </div>
+        </div>
+
+        <div class="time-display">
+            <span class="time-current">{{ formatTime(currentTime) }}</span>
+            <span class="time-divider">/</span>
+            <span class="time-total">{{ formatTime(totalDuration) }}</span>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import {ref, computed} from "vue";
+// import { invoke } from "@tauri-apps/api/core";
+import {currentTime, totalDuration} from "../scripts/globals";
+import {startProgressCollection, stopProgressCollection} from "../scripts/progress-collector.ts";
+import {invoke} from "@tauri-apps/api/core";
+
+const progressBar = ref<HTMLElement | null>(null);
+const isDragging = ref(false);
+const showHover = ref(false);
+const hoverTime = ref(0);
+
+// Calculate percentage for CSS
+const progressPercent = computed(() => {
+    if (totalDuration.value <= 0) return 0;
+    return (currentTime.value / totalDuration.value) * 100;
+});
+
+const hoverPercent = computed(() => {
+    if (totalDuration.value <= 0) return 0;
+    return (hoverTime.value / totalDuration.value) * 100;
+});
+
+// --- Mouse Interaction Logic ---
+
+const updateTimeFromEvent = (e: MouseEvent): number => {
+    if (!progressBar.value) return 0;
+    const rect = progressBar.value.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    // Clamp between 0 and 1
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    return percentage * totalDuration.value;
+};
+
+const updateHoverTime = (e: MouseEvent) => {
+    if (isDragging.value) return; // Don't update hover if we are dragging
+    hoverTime.value = updateTimeFromEvent(e);
+};
+
+const startScrub = (e: MouseEvent) => {
+    isDragging.value = true;
+    // Pause the timer update loop while dragging so it doesn't fight the user
+    // (You might want to implement a flag in your globals like `isScrubbing`)
+
+    // Update UI immediately
+    currentTime.value = updateTimeFromEvent(e);
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+        currentTime.value = updateTimeFromEvent(moveEvent);
+    };
+
+    stopProgressCollection()
+
+    const onMouseUp = async () => {
+        // 1. Remove listeners
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        // 2. Commit the change to Rust
+        await invoke('seek_audio', { time: Math.floor(currentTime.value) });
+
+        // 3. Reset state
+        startProgressCollection()
+        isDragging.value = false;
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+};
+
+// Helper for 00:00 format
 const formatTime = (time: number) => {
     const seconds = Math.floor(time % 60);
     const minutes = Math.floor(time / 60 % 60);
@@ -31,3 +122,5 @@ const formatTime = (time: number) => {
 }
 
 </script>
+
+<style scoped src="../styles/progressbar-style.css"></style>

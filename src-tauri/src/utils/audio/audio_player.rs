@@ -1,10 +1,10 @@
-use tauri::{App, AppHandle, Emitter, Runtime};
 use rodio::{Decoder, OutputStream, Sink, Source};
-use std::sync::{Arc, Mutex, MutexGuard};
 use std::fs::File;
 use std::io::BufReader;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use tauri::{AppHandle, Emitter};
 
 /// The Audio State
 /// sink: The controller of the audio
@@ -86,6 +86,7 @@ pub struct AudioProgress {
     pub duration: u64,
 }
 
+/// To get to progress to update the progress bar
 #[tauri::command]
 pub fn get_playback_progress(state: tauri::State<'_, AudioState>) -> AudioProgress {
     let sink = state.sink.lock().unwrap();
@@ -97,4 +98,16 @@ pub fn get_playback_progress(state: tauri::State<'_, AudioState>) -> AudioProgre
         position,
         duration: *total_duration,
     }
+}
+
+/// To change to position
+#[tauri::command]
+pub fn seek_audio(time: u64, state: tauri::State<'_, AudioState>) -> Result<(), String> {
+    let sink = state.sink.lock().map_err(|_| "Failed to lock sink")?;
+
+    // Rodio's try_seek allows us to jump to a specific Duration
+    sink.try_seek(Duration::from_secs(time))
+        .map_err(|e| format!("Seek failed: {}", e))?;
+
+    Ok(())
 }

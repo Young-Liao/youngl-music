@@ -28,7 +28,8 @@ export async function handleToggle() {
     }
     try {
         isPaused.value = await invoke('toggle_playback', { });
-        stopProgressCollection();
+        if (isPaused.value) stopProgressCollection();
+        else startProgressCollection();
     } catch (error) {
         console.log("Something went wrong: ", error);
     }

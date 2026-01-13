@@ -7,7 +7,7 @@ import {getValidLastFile} from "../scripts/files/playback-history.ts";
 
 const emit = defineEmits(['fileSelected'])
 
-/// This function opens the explorer and lets the user to choose an audio file to play.
+/// This function opens the explorer and lets the user choose an audio file to play.
 async function selectAudio() {
     const file = await open({
         multiple: false,
@@ -17,9 +17,10 @@ async function selectAudio() {
         }]
     })
     console.log("Selected files: ", file);
-    if (file)
+    if (file) {
         noAudio.value = false;
-    playbackHistory.value.push(file);
+        playbackHistory.value.push(file);
+    }
     emit('fileSelected', file);
 }
 

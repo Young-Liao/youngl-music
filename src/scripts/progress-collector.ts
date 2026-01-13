@@ -1,12 +1,12 @@
-import { invoke } from "@tauri-apps/api/core"
-import { currentTime, totalDuration } from "./globals.ts";
+import {invoke} from "@tauri-apps/api/core"
+import {currentTime, totalDuration} from "./globals.ts";
 
-let progressCollector: any = null;
+export let progressCollector: any = null;
 
-export async function updateProgress() {
+export const updateProgress = async () => {
     if (!progressCollector) return;
     try {
-        const stats = await invoke<{position: number, duration: number}>('get_playback_progress'); 
+        const stats = await invoke<{ position: number, duration: number }>('get_playback_progress');
         currentTime.value = stats.position;
         totalDuration.value = stats.duration;
     } catch (e) {
@@ -14,14 +14,14 @@ export async function updateProgress() {
     }
 }
 
-export function stopProgressCollection() {
+export const stopProgressCollection = () => {
     if (progressCollector) {
         clearInterval(progressCollector);
         progressCollector = null;
     }
 }
 
-export function startProgressCollection() {
+export const startProgressCollection = () => {
     stopProgressCollection();
-    progressCollector = setInterval(updateProgress, 500);
+    progressCollector = setInterval(updateProgress, 250);
 }
