@@ -8,7 +8,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(audio_state.1)
+        .manage(audio_state)
         .invoke_handler(tauri::generate_handler![
             utils::audio::play_song,
             utils::audio::toggle_playback,

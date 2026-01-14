@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import {ref, computed} from "vue";
 // import { invoke } from "@tauri-apps/api/core";
-import {currentTime, totalDuration} from "../scripts/globals";
+import {currentTime, isPaused, noAudio, totalDuration} from "../scripts/globals";
 import {startProgressCollection, stopProgressCollection} from "../scripts/progress-collector.ts";
 import {invoke} from "@tauri-apps/api/core";
 
@@ -44,6 +44,7 @@ const progressBar = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
 const showHover = ref(false);
 const hoverTime = ref(0);
+const vueEmit = defineEmits(['restartPlayback']);
 
 // Calculate percentage for CSS
 const progressPercent = computed(() => {
@@ -72,7 +73,7 @@ const updateHoverTime = (e: MouseEvent) => {
     hoverTime.value = updateTimeFromEvent(e);
 };
 
-const startScrub = (e: MouseEvent) => {
+const startScrub = async (e: MouseEvent) => {
     isDragging.value = true;
     // Pause the timer update loop while dragging so it doesn't fight the user
     // (You might want to implement a flag in your globals like `isScrubbing`)
@@ -91,10 +92,26 @@ const startScrub = (e: MouseEvent) => {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
 
-        // 2. Commit the change to Rust
+        console.log("NO AUDIO? ", noAudio.value);
+        // 2. Check if the playback is valid
+        if (noAudio.value) {
+            console.log("Checking ...")
+            const success = await new Promise((resolve) => {
+                vueEmit('restartPlayback', (result: boolean) => resolve(result));
+            });
+
+            console.log("Checked. ", success);
+            // 2. If user rejected/canceled, exit the function early
+            if (!success) {
+                isDragging.value = false;
+                return;
+            }
+        }
+
+        // 3. Commit the change to Rust
         await invoke('seek_audio', { time: Math.floor(currentTime.value) });
 
-        // 3. Reset state
+        // 4. Reset state
         startProgressCollection()
         isDragging.value = false;
     };
