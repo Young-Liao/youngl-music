@@ -1,2 +1,2 @@
-pub mod audio_player;
-pub use audio_player::*;
+pub mod song_player;
+pub use song_player::*;

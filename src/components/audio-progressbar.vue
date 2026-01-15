@@ -37,14 +37,13 @@
 import {ref, computed} from "vue";
 // import { invoke } from "@tauri-apps/api/core";
 import {currentTime, isPaused, noAudio, totalDuration} from "../scripts/globals";
-import {startProgressCollection, stopProgressCollection} from "../scripts/progress-collector.ts";
+import {startProgressCollection, stopProgressCollection} from "../scripts/progress/progress-collector.ts";
 import {invoke} from "@tauri-apps/api/core";
 
 const progressBar = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
 const showHover = ref(false);
 const hoverTime = ref(0);
-const vueEmit = defineEmits(['restartPlayback']);
 
 // Calculate percentage for CSS
 const progressPercent = computed(() => {
@@ -88,30 +87,11 @@ const startScrub = async (e: MouseEvent) => {
     stopProgressCollection()
 
     const onMouseUp = async () => {
-        // 1. Remove listeners
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
 
-        console.log("NO AUDIO? ", noAudio.value);
-        // 2. Check if the playback is valid
-        if (noAudio.value) {
-            console.log("Checking ...")
-            const success = await new Promise((resolve) => {
-                vueEmit('restartPlayback', (result: boolean) => resolve(result));
-            });
+        // Call the rust backend to change the position.
 
-            console.log("Checked. ", success);
-            // 2. If user rejected/canceled, exit the function early
-            if (!success) {
-                isDragging.value = false;
-                return;
-            }
-        }
-
-        // 3. Commit the change to Rust
-        await invoke('seek_audio', { time: Math.floor(currentTime.value) });
-
-        // 4. Reset state
         startProgressCollection()
         isDragging.value = false;
     };
@@ -140,4 +120,4 @@ const formatTime = (time: number) => {
 
 </script>
 
-<style scoped src="../styles/progressbar-style.css"></style>
+<style scoped src="../styles/progress-bar/progressbar-style.css"></style>
