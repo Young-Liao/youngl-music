@@ -2,30 +2,32 @@
 import { onMounted, ref } from "vue";
 import AudioPicker from "../components/audio-picker.vue";
 import AudioProgressbar from "../components/audio-progressbar.vue";
-import { handleSongPlayback, handleToggle, checkAudio } from "../components/audio-player.vue";
-import {isPaused, currentTime, noAudio} from "../scripts/globals"
+import {isPaused} from "../scripts/globals"
 import { listen } from "@tauri-apps/api/event"
-import { stopProgressCollection } from "../scripts/progress/progress-collector.ts";
-import {invoke} from "@tauri-apps/api/core";
-import {toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
+import {loadAudio, resetStates, toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
 
 const selected = ref<string | null>(null);
 
-/// This function let the audio-player play the specified audio file.
+/// This function let the song-player play the specified song file.
 onMounted(async () => {
     await listen('file-selected', async (event) => {
-        const path = event.payload;
         try {
-            await invoke('load_song', { path });
-            console.log("The audio has been loaded.")
-            await toggleAudioPlayback();
-            console.log("The audio has been playing.")
+            const path = event.payload;
+            await loadAudio(path);
 
         } catch (e) {
-            console.log("Failed to load audio: ", e);
+            console.log("Failed to load song: ", e);
         }
     })
+
+    await listen('playback-finished', async () => {
+        resetStates();
+    })
 })
+
+const handleToggle = async () => {
+    await toggleAudioPlayback()
+}
 
 </script>
 

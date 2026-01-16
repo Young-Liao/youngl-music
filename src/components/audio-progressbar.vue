@@ -36,9 +36,9 @@
 <script setup lang="ts">
 import {ref, computed} from "vue";
 // import { invoke } from "@tauri-apps/api/core";
-import {currentTime, isPaused, noAudio, totalDuration} from "../scripts/globals";
-import {startProgressCollection, stopProgressCollection} from "../scripts/progress/progress-collector.ts";
-import {invoke} from "@tauri-apps/api/core";
+import {currentTime, totalDuration} from "../scripts/globals";
+import {setPosition, startProgressCollection, stopProgressCollection} from "../scripts/playback/progress-controller.ts";
+import {checkAudioAvailability} from "../scripts/playback/audio-playback.ts";
 
 const progressBar = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
@@ -90,10 +90,20 @@ const startScrub = async (e: MouseEvent) => {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
 
-        // Call the rust backend to change the position.
-
-        startProgressCollection()
         isDragging.value = false;
+
+        let now_value = currentTime.value;
+        try {
+            if (await checkAudioAvailability()) {
+                console.log("Setting position to ", now_value);
+                // Call the rust backend to change the position.
+                await setPosition(now_value);
+                startProgressCollection()
+            }
+        } catch (e) {
+            console.log("E: ", e);
+        }
+
     };
 
     window.addEventListener('mousemove', onMouseMove);

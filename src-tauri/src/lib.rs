@@ -2,7 +2,7 @@ mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let audio_state = utils::audio::get_audio_state();
+    let (_stream, audio_state) = utils::song::get_audio_state();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -10,8 +10,10 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .manage(audio_state)
         .invoke_handler(tauri::generate_handler![
-            utils::audio::load_song,
-            utils::audio::toggle_playback,
+            utils::song::load_song,
+            utils::song::toggle_playback,
+            utils::song::fetch_progress,
+            utils::song::set_position,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
