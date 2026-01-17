@@ -19,11 +19,20 @@
 }
 
 .theme-midnight {
-    --bg-gradient: linear-gradient(135deg, #09090b 0%, #27272a 50%, #09090b 100%);
-    --accent-primary: #fafafa;
-    --accent-text: #000000; /* Black text on white box */
-    --text-glow: rgba(255, 255, 255, 0.3);
-    --progress-fill: #ffffff;
+    /* Deep "Space Noir" Gradient: Deepest navy to a subtle dark plum */
+    --bg-gradient: linear-gradient(135deg, #020617 0%, #0f172a 40%, #1e1b4b 100%);
+
+    /* "Electric Amethyst" Accent: A vibrant violet that glows against the dark */
+    --accent-primary: #a855f7;
+
+    /* Dark text for the floating box (Black on Glowing Violet looks high-end) */
+    --accent-text: #000000;
+
+    /* Stronger violet glow for the text and progress bar */
+    --text-glow: rgba(168, 85, 247, 0.6);
+
+    /* Sophisticated multi-stop gradient for the progress fill */
+    --progress-fill: linear-gradient(90deg, #a855f7, #6366f1);
 }
 
 .theme-gold {

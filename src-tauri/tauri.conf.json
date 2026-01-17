@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "YoungL Music",
-        "width": 800,
-        "height": 600,
+        "width": 1028,
+        "height": 731,
         "minWidth": 393,
         "minHeight": 741,
         "resizable": true,

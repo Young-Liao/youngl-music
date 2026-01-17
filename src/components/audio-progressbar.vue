@@ -9,15 +9,25 @@
             @mousemove="updateHoverTime"
         >
             <div class="track-base">
-                <div class="track-fill" :style="{ width: progressPercent + '%' }"></div>
-                <div class="track-handle" :style="{ left: progressPercent + '%' }">
-                    <div class="handle-glow"></div>
-                </div>
+                <!-- 1. The Locator: Vertical line following the mouse -->
+                <div
+                    v-show="showHover && !isDragging"
+                    class="track-locator"
+                    :style="{ left: hoverPercent + '%' }"
+                ></div>
+
+                <!-- 2. Hover Preview Fill -->
                 <div v-show="showHover" class="track-hover" :style="{ width: hoverPercent + '%' }"></div>
+
+                <!-- 3. Main Progress Fill -->
+                <div class="track-fill" :style="{ width: progressPercent + '%' }"></div>
+
+                <!-- 4. The Handle: Always visible with breathing animation -->
+                <div class="track-handle" :style="{ left: progressPercent + '%' }"></div>
             </div>
 
+            <!-- Floating Tooltip: Responsive text color and slide-up animation -->
             <div
-                v-show="true"
                 class="floating-time"
                 :class="isDragging || showHover ? 'show-floating-time' : 'hide-floating-time'"
                 :style="{ left: (isDragging ? progressPercent : hoverPercent) + '%' }"

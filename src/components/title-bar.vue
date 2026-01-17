@@ -4,36 +4,34 @@ import { isPaused } from '../scripts/globals';
 
 const appWindow = getCurrentWindow();
 
+// Window Actions
 const minimize = () => appWindow.minimize();
 const toggleMax = () => appWindow.toggleMaximize();
 const close = () => appWindow.close();
 
-/**
- * Initiates native window dragging.
- * We trigger this on mousedown.
- */
+// Manual Window Drag
 const startWindowDrag = async () => {
     await appWindow.startDragging();
 };
 </script>
 
 <template>
-    <!-- Use @mousedown to trigger the native drag -->
+    <!-- Parent handles drag -->
     <div class="titlebar" @mousedown="startWindowDrag">
-        <div class="traffic-lights">
-            <!-- Use .stop to prevent the drag from starting when clicking buttons -->
+
+        <!-- STOP Mousedown propagation here so buttons work -->
+        <div class="traffic-lights" @mousedown.stop>
             <button class="win-btn close" @click="close">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x"></i>
             </button>
             <button class="win-btn min" @click="minimize">
-                <i class="bi bi-dash-lg"></i>
+                <i class="bi bi-dash"></i>
             </button>
             <button class="win-btn max" @click="toggleMax">
-                <i class="bi bi-arrows-angle-expand"></i>
+                <i class="bi bi-fullscreen"></i>
             </button>
         </div>
 
-        <!-- app-title has pointer-events: none so mousedown passes through to the bar -->
         <div class="app-title" :class="{ 'playing': !isPaused }">
             YoungL Music
         </div>
@@ -47,28 +45,28 @@ const startWindowDrag = async () => {
     height: 44px;
     width: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     padding: 0 16px;
     z-index: 9999;
     user-select: none;
     cursor: default;
     position: relative;
-    /* Optional: add a subtle bottom border to define the bar */
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .app-title {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    transform: translate(-50%, -50%);
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     color: rgba(255, 255, 255, 0.3);
-    transition: color 0.5s ease, text-shadow 0.5s ease;
-    pointer-events: none; /* Mouse events pass through to the titlebar */
+    pointer-events: none; /* Dragging works even through text */
     text-transform: uppercase;
+    transition: all 0.5s ease;
 }
 
 .app-title.playing {
@@ -79,29 +77,37 @@ const startWindowDrag = async () => {
 .traffic-lights {
     display: flex;
     gap: 8px;
-    position: relative;
     z-index: 10000;
 }
 
 .win-btn {
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     border: none;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: transparent;
+    color: transparent; /* Icons hidden by default */
     transition: 0.2s;
-    background: rgba(255, 255, 255, 0.15);
     cursor: pointer;
+    font-size: 9px;
 }
 
-.win-btn:hover { color: rgba(0, 0, 0, 0.6); }
-.win-btn.close:hover { background: #ff5f56; }
-.win-btn.min:hover { background: #ffbd2e; }
-.win-btn.max:hover { background: #27c93f; }
+/* Show icons only when hovering over the group (Mac Style) */
+.traffic-lights:hover .win-btn {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* Traffic Light Colors */
+.win-btn.close { background: #ff5f56; }
+.win-btn.min { background: #ffbd2e; }
+.win-btn.max { background: #27c93f; }
+
+.win-btn.close:hover { background: #ff7b73; }
+.win-btn.min:hover { background: #ffcf66; }
+.win-btn.max:hover { background: #3ef056; }
 
 .spacer { width: 50px; }
 </style>
