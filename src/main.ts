@@ -1,5 +1,5 @@
 import './styles/styles'
-import './styles/themes.css'
+import './scripts/controls/volume.ts'
 
 import { createApp } from "vue";
 import App from "./App.vue";

@@ -4,15 +4,13 @@ import {getValidLastFile} from "./playback-history.ts";
 
 /// This function uses a dialog to select an audio file.
 export const selectAudio = async () => {
-    const file = await open({
-        multiple: false,
+    return await open({
+        multiple: true,
         filters: [{
             name: 'Audio',
             extensions: ['mp3', 'wav', "flac"]
         }]
-    })
-    console.log("Selected file: ", file);
-    return file;
+    });
 };
 
 /// This function opens the explorer and lets the user choose an song file to play.

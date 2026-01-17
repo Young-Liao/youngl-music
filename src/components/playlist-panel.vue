@@ -1,26 +1,105 @@
-<!-- src/components/playlist-panel.vue -->
 <script setup lang="ts">
-import { playlist } from "../scripts/globals";
-import { handleSelectionNeeded } from "../scripts/files/file-selection.ts";
+import {playlist} from "../scripts/globals";
+import {handleSelectionNeeded} from "../scripts/files/file-selection.ts";
+import {onMounted, ref, watch} from "vue";
+import {emit, listen} from "@tauri-apps/api/event";
+import {addToPlayList, shuffle} from "../scripts/files/playlist.ts";
+import {invoke} from "@tauri-apps/api/core";
 
-defineProps<{ isOpen: boolean }>();
+const props = defineProps<{ isOpen: boolean }>();
 defineEmits(['close']);
 
-const getFileName = (path: string) => path.split(/[\\/]/).pop() || path;
+const playlistUpdated = ref(false);
+
+const audioList = ref<{
+    title: string,
+    artist: string,
+    album: string,
+    cover: string,
+    total_duration: number
+}[]>([])
+
+const shufflePlaylist = () => {
+    if (playlist.value.length <= 1) return;
+
+    let newPlaylist = [...playlist.value];
+    let newAudioList = [...audioList.value];
+
+    shuffle(newPlaylist, newAudioList);
+
+    playlist.value = newPlaylist;
+    audioList.value = newAudioList;
+};
+
+const refreshData = async () => {
+    playlistUpdated.value = false;
+    const metadata = await invoke<{
+        title: string,
+        artist: string,
+        album: string,
+        cover: string,
+        total_duration: number
+    }[]>('fetch_metadata', { paths: playlist.value });
+
+    // Process titles
+    audioList.value = metadata.map((item, index) => ({
+        ...item,
+        title: item.title || playlist.value[index].split(/[\\/]/).pop() || "Unknown Title"
+    }));
+}
+
+onMounted(async () => {
+    await listen('refresh-playlist', () => {
+        if (props.isOpen) {
+            refreshData();
+        } else {
+            playlistUpdated.value = true;
+        }
+    });
+});
 
 const addFiles = async () => {
-    // This will trigger the file picker
     await handleSelectionNeeded();
 };
+
+watch(() => props.isOpen, () => {
+    if (playlistUpdated) {
+        refreshData();
+    }
+})
+
+onMounted(async () => {
+    await listen('file-selected', async (event) => {
+        const path = event.payload;
+        if (Array.isArray(path)) {
+            addToPlayList(path);
+            await emit("playlist-updated-successfully");
+        } else {
+            if (typeof path === 'string') addToPlayList([path]);
+            await emit("playlist-updated-successfully");
+        }
+    });
+});
 </script>
 
 <template>
     <div class="playlist-sidebar" :class="{ 'is-open': isOpen }">
         <div class="sidebar-header">
-            <div class="title-section">
-                <i class="bi bi-collection-play"></i>
-                <span>Queue</span>
+            <div class="header-left">
+                <div class="title-section">
+                    <i class="bi bi-collection-play"></i>
+                    <span>Queue</span>
+                </div>
+                <button
+                    v-if="playlist.length > 1"
+                    class="action-icon-btn"
+                    @click.stop="shufflePlaylist"
+                    title="Shuffle Queue"
+                >
+                    <i class="bi bi-shuffle"></i>
+                </button>
             </div>
+
             <button class="close-panel-btn" @click="$emit('close')">
                 <i class="bi bi-chevron-right"></i>
             </button>
@@ -28,18 +107,36 @@ const addFiles = async () => {
 
         <div class="sidebar-content">
             <div v-if="playlist.length === 0" class="empty-list">
+                <i class="bi bi-music-note-list"></i>
                 <p>No songs in queue</p>
             </div>
+
             <div v-else class="song-list">
-                <div v-for="(path, idx) in playlist" :key="idx" class="song-item">
-                    <span class="song-idx">{{ idx + 1 }}</span>
-                    <span class="song-name" :title="path">{{ getFileName(path) }}</span>
+                <div v-for="(song, idx) in audioList" :key="idx" class="song-item">
+                    <span class="song-idx">{{ (idx + 1).toString().padStart(2, '0') }}</span>
+
+                    <!-- SONG COVER THUMBNAIL -->
+                    <div class="song-thumb">
+                        <img v-if="song.cover" :src="song.cover" class="thumb-img" alt="cover" />
+                        <div v-else class="thumb-placeholder">
+                            <i class="bi bi-music-note"></i>
+                        </div>
+                    </div>
+
+                    <div class="song-details">
+                        <span class="song-title" :title="song.title">{{ song.title }}</span>
+                        <span class="song-artist">{{ song.artist || 'Unknown Artist' }}</span>
+                    </div>
+
+                    <div class="song-actions">
+                        <i class="bi bi-three-dots"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="sidebar-footer">
-            <button class="modern-add-btn" @click="addFiles">
+            <button class="modern-add-btn" @click.stop="addFiles">
                 <i class="bi bi-plus-circle-dotted"></i>
                 <span>Import Audio</span>
             </button>
@@ -47,96 +144,4 @@ const addFiles = async () => {
     </div>
 </template>
 
-<style scoped>
-.playlist-sidebar {
-    position: fixed;
-    top: 0;
-    right: -320px;
-    width: 300px;
-    height: 100vh;
-    background: rgba(10, 10, 10, 0.7);
-    backdrop-filter: blur(40px) saturate(180%);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 10001; /* Above everything */
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-}
-
-.playlist-sidebar.is-open {
-    transform: translateX(-320px);
-    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.8);
-}
-
-.sidebar-header {
-    padding: 30px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.title-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 0.9rem;
-    color: var(--accent-primary);
-}
-
-.close-panel-btn {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    opacity: 0.5;
-}
-
-.sidebar-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 15px;
-}
-
-.song-item {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 5px;
-    background: rgba(255, 255, 255, 0.03);
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.song-item:hover { background: rgba(255, 255, 255, 0.08); }
-
-.song-idx { width: 30px; opacity: 0.3; font-family: var(--font-mono); font-size: 0.8rem; }
-.song-name { flex: 1; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.sidebar-footer { padding: 25px; }
-
-.modern-add-btn {
-    width: 100%;
-    padding: 15px;
-    border-radius: 16px;
-    border: 1px dashed rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.modern-add-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--accent-primary);
-    transform: translateY(-2px);
-}
-</style>
+<style scoped src="../styles/components/playlist-panel.css"/>

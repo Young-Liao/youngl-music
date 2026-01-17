@@ -1,0 +1,100 @@
+import {currentIndex, playlist} from "../globals.ts";
+import { exists } from "@tauri-apps/plugin-fs";
+import {emit} from "@tauri-apps/api/event";
+
+/**
+ * Adds multiple file paths to the playlist.
+ * Ignores files already present to prevent duplicates.
+ */
+export const addToPlayList = (paths: string[]) => {
+    // 1. Create a Set of current paths for high-performance lookup
+    const currentSet = new Set(playlist.value);
+
+    // 2. Filter out duplicates and invalid paths
+    const newUniquePaths = paths.filter(path => path && !currentSet.has(path));
+
+    // 3. Exit early if no new unique songs were found
+    if (newUniquePaths.length === 0) return;
+
+    // 4. Record if the playlist was empty before adding
+    const wasEmpty = playlist.value.length === 0;
+
+    // 5. Append new songs to the master list
+    playlist.value.push(...newUniquePaths);
+
+    // 6. If it was empty, ensure we point to the first newly added song
+    if (wasEmpty) {
+        currentIndex.value = 0;
+    }
+
+    emit('refresh-playlist').then();
+};
+
+/**
+ * Shuffle an array
+ */
+export const shuffle = <T, T2>(array: &T[], array_: &T2[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        // Pick a random index from 0 to i
+        const j = Math.floor(Math.random() * (i + 1));
+
+        // Swap elements array[i] and array[j]
+        [array[i], array[j]] = [array[j], array[i]];
+        [array_[i], array_[j]] = [array_[j], array_[i]];
+    }
+};
+
+/**
+ * Removes a file from the playlist and triggers a shuffle refresh.
+ */
+const removeFile = (index: number) => {
+    playlist.value.splice(index, 1);
+
+    if (playlist.value.length == 0) {
+        currentIndex.value = 0;
+    }
+};
+
+/**
+ * Implementation with auto-cleanup and shuffle re-sync
+ */
+export const getNextValidAudio = async (mode: number): Promise<string | null> => {
+    if (playlist.value.length === 0) return null;
+
+    let attempts = 0;
+    // We loop until we find a valid file or empty the list
+    while (playlist.value.length > 0 && attempts < playlist.value.length) {
+
+        // 1. Calculate Pointers based on Mode
+        if (mode === 2) {
+            // Repeat 1 logic: stay on current index unless we are forced to skip
+        } else if (mode === 0) {
+            currentIndex.value = Math.floor(Math.random() * playlist.value.length);
+        } else {
+            // Repeat All / Order
+            currentIndex.value = (currentIndex.value + 1) % playlist.value.length;
+        }
+
+        const currentPath = playlist.value[currentIndex.value];
+
+        // 2. Validate existence
+        try {
+            const fileExists = await exists(currentPath);
+            if (fileExists) {
+                return currentPath;
+            } else {
+                // FILE IS INVALID: Remove it and re-calculate
+                removeFile(currentIndex.value);
+                // After removal, the shuffle list is different.
+                // We reset attempts and try again from the new "current"
+                attempts = 0;
+                if (mode === 2) mode = 1; // Fallback to "Repeat All" logic if Repeat 1 file is gone
+            }
+        } catch (err) {
+            removeFile(currentIndex.value);
+            attempts++;
+        }
+    }
+
+    return null;
+};

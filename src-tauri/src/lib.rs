@@ -14,6 +14,8 @@ pub fn run() {
             utils::song::toggle_playback,
             utils::song::fetch_progress,
             utils::song::set_position,
+            utils::song::set_volume,
+            utils::song::fetch_metadata,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

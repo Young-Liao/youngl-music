@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 import { listen } from "@tauri-apps/api/event";
-import { loadAudio, resetStates } from "../scripts/playback/audio-playback.ts";
+import { resetStates } from "../scripts/playback/audio-playback.ts";
 
 import AudioProgressbar from "../components/audio-progressbar.vue";
 import AudioControls from "../components/audio-controls.vue";
@@ -33,14 +33,7 @@ onMounted(async () => {
     // Random theme on startup
     randomizeTheme();
 
-    await listen('file-selected', async (event) => {
-        const path = event.payload as string;
-        selected.value = path;
-        randomizeTheme();
-        await loadAudio(path);
-    });
-
-    await listen('playback-finished', async () => resetStates());
+    await listen('playback-finished', async () => await resetStates());
 });
 
 onUnmounted(() => window.removeEventListener('resize', checkWindowSize));

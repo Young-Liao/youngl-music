@@ -1,82 +1,129 @@
 import {invoke} from "@tauri-apps/api/core";
-import {currentTime, isPaused, lockCurrentTime, noAudio, playbackHistory, totalDuration} from "../globals.ts";
+import {
+    currentMetadata,
+    currentTime,
+    isPaused,
+    lockCurrentTime,
+    noAudio,
+    playbackHistory,
+    playbackMode,
+} from "../globals.ts";
 import {startProgressCollection, stopProgressCollection} from "./progress-controller.ts";
-import {emit, listen} from "@tauri-apps/api/event";
+import {listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
+import {getValidLastFile} from "../files/playback-history.ts";
+import {getNextValidAudio} from "../files/playlist.ts";
 
 /// Load the audio after choosing a file.
 export const loadAudio = async (path: unknown) => {
-    if (path == null) {
+    console.log("Load audio: ", path);
+    if (typeof path != "string") {
         console.log("Selection Canceled... Not loading...");
-        await emit("audio-not-loaded");
+        return false;
     } else {
         noAudio.value = false;
         isPaused.value = false;
-        totalDuration.value = await invoke<number>('load_song', {path: path});
+        const metadata = await invoke<{
+            title: string,
+            artist: string,
+            album: string,
+            cover: string,
+            total_duration: number
+        }>('load_song', {path: path});
+        console.log(metadata);
+        currentMetadata.value = {
+            title: metadata.title || path.split(/[\\/]/).pop() || "Unknown Title",
+            artist: metadata.artist || "Unknown Artist",
+            cover: metadata.cover, // This is our Base64 string
+            totalDuration: metadata.total_duration,
+        };
         if (!lockCurrentTime)
             currentTime.value = 0;
         startProgressCollection();
-        playbackHistory.value.push(path as string);
-        await emit("audio-loaded");
+        if (path !== playbackHistory.value[playbackHistory.value.length - 1])
+            playbackHistory.value.push(path as string);
         console.log("The song has been loaded.")
+        return true;
     }
 }
 
 /// Reset all the state to no-audio state
-export const resetStates = () => {
+export const resetStates = async () => {
     stopProgressCollection()
     noAudio.value = true;
     isPaused.value = true;
     currentTime.value = 0;
+    await checkAudioAvailability();
 }
+
+const getFromFile = async () => {
+    return new Promise<boolean>((resolve, reject) => {
+        let unlisten_suc: () => void;
+        let unlisten_fai: () => void;
+
+        const cleanup = () => {
+            if (unlisten_suc) unlisten_suc();
+            if (unlisten_fai) unlisten_fai();
+        };
+
+        const setup = async () => {
+            unlisten_suc = await listen("playlist-updated-successfully", async () => {
+                cleanup();
+                resolve(true);
+            });
+            unlisten_fai = await listen("playlist-updated-unsuccessfully", async () => {
+                cleanup();
+                resolve(false);
+            })
+        };
+        setup()
+            .then(() => handleFileNeeded())
+            .catch((e) => {
+                cleanup();
+                reject(e);
+            });
+    })
+};
 
 /// Check if there's an available audio to play. If not, let the user choose one, and then START PLAYING
-export const checkAudioAvailability = async () => {
+export const checkAudioAvailability = async (priority: string = 'playlist') => {
     console.log("Checking audio availability...");
-    let result = false;
-    if (noAudio.value) {
-        console.log("No audio loaded...");
-        try {
-            const res = await new Promise<{ok: boolean, data: unknown}>((resolve, reject) => {
-                let unlisten_suc: () => void;
-                let unlisten_fai: () => void;
 
-                const cleanup = () => {
-                    if (unlisten_suc) unlisten_suc();
-                    if (unlisten_fai) unlisten_fai();
-                };
-
-                // 1. Setup listeners
-                const setupListeners = async () => {
-                    unlisten_suc = await listen("audio-loaded", (event) => {
-                        cleanup();
-                        resolve({ok: true, data: event.payload});
-                    });
-
-                    unlisten_fai = await listen("audio-not-loaded", (event) => {
-                        cleanup();
-                        resolve({ok: false, data: event.payload});
-                    });
-                };
-
-                // 2. Run setup and then the trigger
-                setupListeners()
-                    .then(() => handleFileNeeded())
-                    .catch((e) => {
-                        cleanup();
-                        reject(e);
-                    });
-            });
-            result = res.ok;
-        } catch (e) {
-            console.log("Error when checking audio availability: ", e);
-        }
-    } else {
-        result = true;
+    // If audio is already loaded and ready, we are good.
+    if (!noAudio.value) {
+        console.log("Audio already loaded.");
+        return true;
     }
-    console.log("Result = ", result);
-    return result;
-}
+
+    let file: string | null;
+
+    // 1. Try the primary priority
+    if (priority === 'playlist') {
+        file = await getNextValidAudio(playbackMode.value);
+    } else {
+        file = await getValidLastFile();
+    }
+
+    // 2. Fallthrough: If the primary failed, try the alternative
+    if (file == null) {
+        console.log(`Priority ${priority} failed, trying alternative...`);
+        if (priority === 'playlist') {
+            file = await getValidLastFile();
+        } else {
+            file = await getNextValidAudio(playbackMode.value);
+        }
+    }
+
+    // 3. No invalid file: let the user choose and add to the playlist.
+    if (file == null) {
+        let res = await getFromFile();
+        if (res) {
+            file = await getNextValidAudio(playbackMode.value);
+        }
+    }
+
+    return await loadAudio(file);
+};
 
 /// Call Rust to toggle audio playback.
 export const toggleAudioPlayback = async () => {

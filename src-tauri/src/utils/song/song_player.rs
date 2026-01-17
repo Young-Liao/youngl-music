@@ -1,3 +1,5 @@
+use audiotags::Tag;
+use base64::{engine::general_purpose, Engine as _};
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
 use std::fs::File;
 use std::sync::atomic::AtomicBool;
@@ -10,10 +12,20 @@ pub struct AudioState {
     is_paused: Arc<Mutex<AtomicBool>>,
 }
 
+#[derive(serde::Serialize)]
+pub struct AudioMetadata {
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub cover: Option<String>, // Base64 encoded image
+    pub total_duration: f64,
+}
+
 pub fn get_audio_state() -> (OutputStream, AudioState) {
     let output_stream =
         OutputStreamBuilder::open_default_stream().expect("Failed to open default output stream.");
     let sink = Arc::new(Mutex::new(Sink::connect_new(&output_stream.mixer())));
+    sink.lock().unwrap().set_volume(0.8);
     (
         output_stream,
         AudioState {
@@ -43,12 +55,53 @@ pub fn spawn_playback_watcher(app_handle: AppHandle, state: &State<'_, AudioStat
     });
 }
 
+/// Get the metadata of multiple files.
+pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
+    match Tag::new().read_from_path(&path) {
+        Ok(tag) => {
+            let cover_base64 = tag.album_cover().map(|cover| {
+                let b64 = general_purpose::STANDARD.encode(cover.data);
+                format!("data:{:?};base64,{}", cover.mime_type, b64)
+            });
+            AudioMetadata {
+                title: tag.title().map(|s| s.to_string()),
+                artist: tag.artist().map(|s| s.to_string()),
+                album: tag.album().map(|a| a.title.to_string()),
+                cover: cover_base64,
+                total_duration,
+            }
+        }
+        Err(_e) => {
+            // if cfg!(debug_assertions) {
+                // println!("Error occurred when getting metadata: {}", e);
+            // }
+            AudioMetadata {
+                title: None,
+                artist: None,
+                album: None,
+                cover: None,
+                total_duration,
+            }
+        }
+    }
+}
+
+/// Get the metadata of some files.
+#[tauri::command]
+pub fn fetch_metadata(paths: Vec<String>) -> Result<Vec<AudioMetadata>, String> {
+    Ok(paths.iter().map(|path| get_metadata(path, 0.)).collect())
+}
+
 /// Load the song with the path of the song file.
 /// This function plays the song.
 /// Return the total duration.
 #[tauri::command]
-pub fn load_song(path: String, state: State<'_, AudioState>, app_handle: AppHandle) -> Result<f64, String> {
-    let file = File::open(path).map_err(|e| format!("[ERROR] Failed to open the file: {}", e))?;
+pub fn load_song(
+    path: String,
+    state: State<'_, AudioState>,
+    app_handle: AppHandle,
+) -> Result<AudioMetadata, String> {
+    let file = File::open(&path).map_err(|e| format!("[ERROR] Failed to open the file: {}", e))?;
     let source = Decoder::try_from(file).map_err(|e| format!("[ERROR] Failed to decode: {}", e))?;
 
     let total_duration = source.total_duration().unwrap().as_secs_f64();
@@ -67,7 +120,7 @@ pub fn load_song(path: String, state: State<'_, AudioState>, app_handle: AppHand
         println!("[DEBUG] Succeeded to load the song...");
     }
 
-    Ok(total_duration)
+    Ok(get_metadata(&path, total_duration))
 }
 
 /// Toggle playback.
@@ -97,7 +150,7 @@ pub fn toggle_playback(state: State<'_, AudioState>) -> Result<bool, String> {
     Ok(new_state)
 }
 
-// Fetch the song playback progress.
+/// Fetch the song playback progress.
 #[tauri::command]
 pub fn fetch_progress(state: State<'_, AudioState>) -> Result<f64, String> {
     let sink = state.sink.lock().unwrap();
@@ -105,7 +158,7 @@ pub fn fetch_progress(state: State<'_, AudioState>) -> Result<f64, String> {
     Ok(current_time)
 }
 
-// Set the position
+/// Set the position
 #[tauri::command]
 pub fn set_position(time: f64, state: State<'_, AudioState>) -> Result<(), String> {
     let sink = state.sink.lock().unwrap();
@@ -114,5 +167,13 @@ pub fn set_position(time: f64, state: State<'_, AudioState>) -> Result<(), Strin
     sink.try_seek(seek_time)
         .map_err(|e| format!("Failed to seek: {}", e))?;
 
+    Ok(())
+}
+
+/// Set the volume
+#[tauri::command]
+pub fn set_volume(volume: f32, state: State<'_, AudioState>) -> Result<(), String> {
+    let sink = state.sink.lock().unwrap();
+    sink.set_volume(volume / 100.);
     Ok(())
 }

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { isPaused, volume } from "../scripts/globals";
+import {ref, computed} from "vue";
+import {isPaused, playbackMode, volume} from "../scripts/globals";
 import { toggleAudioPlayback } from "../scripts/playback/audio-playback.ts";
 
-const playbackMode = ref(0);
 const lastVolume = ref(volume.value || 80); // Store volume for unmuting
 
-const toggleMode = () => playbackMode.value = (playbackMode.value + 1) % 4;
+const toggleMode = () => playbackMode.value = (playbackMode.value + 1) % 3;
 
 const toggleMute = () => {
     if (volume.value > 0) {
@@ -19,10 +18,9 @@ const toggleMute = () => {
 
 const modeIcon = computed(() => {
     switch(playbackMode.value) {
-        case 1: return 'bi-shuffle';
-        case 2: return 'bi-repeat-1';
-        case 3: return 'bi-repeat';
-        default: return 'bi-distribute-horizontal';
+        case 0: return 'bi-shuffle';
+        case 1: return 'bi-repeat';
+        default: return 'bi-repeat-1';
     }
 });
 
@@ -37,7 +35,7 @@ const volumeIcon = computed(() => {
     <div class="nyx-controls-deck">
         <!-- LEFT: Utility -->
         <div class="sector left">
-            <button class="mini-btn" @click="toggleMode" :class="{ 'active': playbackMode !== 0 }">
+            <button class="mini-btn active" @click="toggleMode">
                 <i :class="`bi ${modeIcon}`"></i>
             </button>
             <button class="mini-btn" title="Lyrics">

@@ -39,7 +39,7 @@
         <div class="time-display">
             <span class="time-current">{{ formatTime(currentTime) }}</span>
             <span class="time-divider">/</span>
-            <span class="time-total">{{ formatTime(totalDuration) }}</span>
+            <span class="time-total">{{ formatTime(currentMetadata.totalDuration) }}</span>
         </div>
     </div>
 </template>
@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import {ref, computed} from "vue";
 // import { invoke } from "@tauri-apps/api/core";
-import {currentTime, lockCurrentTime, totalDuration} from "../scripts/globals";
+import {currentMetadata, currentTime, lockCurrentTime} from "../scripts/globals";
 import {setPosition, startProgressCollection, stopProgressCollection} from "../scripts/playback/progress-controller.ts";
 import {checkAudioAvailability} from "../scripts/playback/audio-playback.ts";
 
@@ -58,13 +58,13 @@ const hoverTime = ref(0);
 
 // Calculate percentage for CSS
 const progressPercent = computed(() => {
-    if (totalDuration.value <= 0) return 0;
-    return (currentTime.value / totalDuration.value) * 100;
+    if (currentMetadata.value.totalDuration <= 0) return 0;
+    return (currentTime.value / currentMetadata.value.totalDuration) * 100;
 });
 
 const hoverPercent = computed(() => {
-    if (totalDuration.value <= 0) return 0;
-    return (hoverTime.value / totalDuration.value) * 100;
+    if (currentMetadata.value.totalDuration <= 0) return 0;
+    return (hoverTime.value / currentMetadata.value.totalDuration) * 100;
 });
 
 // --- Mouse Interaction Logic ---
@@ -75,7 +75,7 @@ const updateTimeFromEvent = (e: MouseEvent): number => {
     const x = e.clientX - rect.left;
     // Clamp between 0 and 1
     const percentage = Math.max(0, Math.min(1, x / rect.width));
-    return percentage * totalDuration.value;
+    return percentage * currentMetadata.value.totalDuration;
 };
 
 const updateHoverTime = (e: MouseEvent) => {
@@ -105,7 +105,7 @@ const startScrub = async (e: MouseEvent) => {
         try {
             lockCurrentTime.value = true;
             if (await checkAudioAvailability()) {
-                if (now_value > totalDuration.value) {
+                if (now_value > currentMetadata.value.totalDuration) {
                     console.log("Position gets out of bound.")
                 } else {
                     console.log("Setting position to ", now_value);

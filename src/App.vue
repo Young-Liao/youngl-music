@@ -5,6 +5,7 @@ import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
 
 const isPlaylistOpen = ref(false);
+
 </script>
 
 <template>
