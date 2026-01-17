@@ -15,6 +15,7 @@ export const loadAudio = async (path: unknown) => {
         totalDuration.value = await invoke<number>('load_song', {path: path});
         if (!lockCurrentTime)
             currentTime.value = 0;
+        startProgressCollection();
         playbackHistory.value.push(path as string);
         await emit("audio-loaded");
         console.log("The song has been loaded.")

@@ -78,3 +78,25 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 100;
 }
+
+.show-floating-time {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.hide-floating-time {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+
+.show-floating-time {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.hide-floating-time {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+

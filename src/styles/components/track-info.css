@@ -9,7 +9,32 @@
 .text-details {
     margin-top: 24px;
     text-align: center;
-    width: 100%; /* Ensure it spans the container to justify-center text */
+    width: 100%;
+    padding: 0 10%;
+    box-sizing: border-box;
+}
+
+.track-title {
+    font-family: var(--font-main);
+    /* Shrinks based on window width automatically */
+    font-size: clamp(1rem, 4vw, 1.6rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.5px;
+
+    /* Ellipsis logic */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Animation when song changes */
+    transition: all 0.0s ease;
+}
+
+.track-artist {
+    transition: opacity 0.3s ease;
+    opacity: 0.6;
 }
 
 /* The Album Art Card */
@@ -44,18 +69,3 @@
     box-shadow: 0 30px 60px -12px rgba(0,0,0,0.9);
 }
 
-.track-title {
-    font-family: var(--font-main);
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 6px 0;
-    letter-spacing: -0.5px;
-}
-
-.track-artist {
-    font-family: var(--font-main);
-    font-size: 1rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-}

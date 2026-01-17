@@ -52,43 +52,48 @@ const toggleMobileView = () => {
 
 <template>
     <div class="window-shell" :class="currentTheme">
+        <!-- The background gradient layer -->
         <div class="background-fx"></div>
 
         <div class="glass-layer">
+            <!-- Window Movement handled in TitleBar -->
             <TitleBar />
 
             <div class="content-area" :class="{ 'layout-wide': isWide }">
+                <!-- Middle Section: Visuals and Lyrics -->
+                <div class="player-body">
+                    <div class="left-pane">
+                        <div class="visual-container" @click="toggleMobileView"
+                             :class="{'hidden': !isWide && showLyricsMobile, 'clickable': !isWide}">
+                            <TrackInfo :path="selected" />
+                        </div>
 
-                <div class="left-pane">
-                    <div class="visual-container" @click="toggleMobileView" :class="{'hidden': !isWide && showLyricsMobile, 'clickable': !isWide}">
-                        <TrackInfo :path="selected" />
+                        <div class="lyrics-mobile-container" @click="toggleMobileView"
+                             :class="{'active': !isWide && showLyricsMobile}">
+                            <LyricsView />
+                        </div>
                     </div>
 
-                    <div class="lyrics-mobile-container" @click="toggleMobileView" :class="{'active': !isWide && showLyricsMobile}">
+                    <div class="right-pane" :class="{'visible': isWide}">
                         <LyricsView />
                     </div>
-
-                    <div class="controls-container">
-                        <AudioProgressbar />
-                        <AudioControls />
-                    </div>
                 </div>
+            </div>
 
-                <div class="right-pane" :class="{'visible': isWide}">
-                    <LyricsView />
-                </div>
-
+            <!-- Bottom Section: Full Width Controls -->
+            <div class="controls-outer-wrapper">
+                <AudioProgressbar />
+                <AudioControls />
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-/* Update these specific classes in the <style> section */
 .window-shell {
     width: 100vw;
     height: 100vh;
-    background: transparent; /* Changed from #000 */
+    background: #050505; /* Solid base */
     overflow: hidden;
     position: relative;
 }
@@ -97,8 +102,8 @@ const toggleMobileView = () => {
     position: absolute;
     inset: 0;
     background: var(--bg-gradient);
-    filter: blur(100px); /* Increased blur */
-    opacity: 0.6;
+    filter: blur(100px);
+    opacity: 0.8; /* Higher opacity for vivid colors */
     transition: background 1s ease;
     z-index: 0;
 }
@@ -108,21 +113,28 @@ const toggleMobileView = () => {
     z-index: 1;
     width: 100%;
     height: 100%;
-    /* Darken slightly but keep it transparent enough for blur */
-    background: rgba(10, 10, 10, 0.4);
-    backdrop-filter: blur(40px) saturate(150%);
+    /* Acrylic density: 0.8 opacity makes it look premium */
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(50px) saturate(180%);
     display: flex;
     flex-direction: column;
 }
 
-/* --- FLUID LAYOUT (Flexbox) --- */
 .content-area {
     flex: 1;
     display: flex;
-    flex-direction: column; /* Default: Mobile Stack */
-    padding: 0 20px 20px 20px;
-    gap: 20px;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    flex-direction: column;
+    padding: 0 20px;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.player-body {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
 }
 
 .left-pane {
@@ -130,60 +142,46 @@ const toggleMobileView = () => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 100%;
-    transition: all 0.4s ease;
+    transition: all 0.5s ease;
 }
 
 .right-pane {
     width: 0;
     opacity: 0;
     overflow: hidden;
-    transition: all 0.4s ease;
-    /* Hide completely in mobile */
-    display: none;
-}
-
-/* --- WIDE MODE (Desktop) --- */
-.content-area.layout-wide {
-    flex-direction: row; /* Switch to side-by-side */
-    padding: 40px;
-    gap: 40px;
-}
-
-.content-area.layout-wide .right-pane {
     display: flex;
-    width: 50%; /* Take half space */
-    opacity: 1;
+    /* Slide and fade animation */
+    transition: width 0.5s ease, opacity 0.4s ease, transform 0.5s ease;
+    transform: translateX(20px);
 }
 
-.content-area.layout-wide .left-pane {
+.right-pane.visible {
     width: 50%;
+    opacity: 1;
+    transform: translateX(0);
 }
 
-/* --- COMPONENT CONTAINERS --- */
-.visual-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-.visual-container.hidden { display: none; }
-.visual-container.clickable { cursor: pointer; }
-.visual-container.clickable:active { transform: scale(0.96); }
-
-/* Mobile Lyrics Overlay Logic */
-.lyrics-mobile-container {
-    display: none;
-    flex: 1;
-    cursor: pointer;
-}
-.lyrics-mobile-container.active { display: flex; }
-
-.controls-container {
+/* Full Width Bottom Controls */
+.controls-outer-wrapper {
     width: 100%;
-    /* Removed max-width to fill window as requested */
-    margin-top: auto;
-    padding-top: 20px;
+    padding: 20px 40px 40px 40px;
+    box-sizing: border-box;
+    z-index: 10;
+    /* Gentle gradient at bottom to ground the controls */
+    background: linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%);
+    transition: all 0.4s ease;
+}
+
+/* Mobile Toggles Animations */
+.visual-container { transition: opacity 0.3s ease, transform 0.3s ease; }
+.visual-container.hidden { opacity: 0; pointer-events: none; transform: scale(0.9); display: none; }
+.visual-container.clickable { cursor: pointer; }
+
+.lyrics-mobile-container { display: none; flex: 1; cursor: pointer; transition: opacity 0.3s ease; }
+.lyrics-mobile-container.active { display: flex; animation: fadeIn 0.4s ease; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>

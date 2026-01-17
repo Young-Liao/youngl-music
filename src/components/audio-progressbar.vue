@@ -17,8 +17,9 @@
             </div>
 
             <div
-                v-show="showHover || isDragging"
+                v-show="true"
                 class="floating-time"
+                :class="isDragging || showHover ? 'show-floating-time' : 'hide-floating-time'"
                 :style="{ left: (isDragging ? progressPercent : hoverPercent) + '%' }"
             >
                 {{ formatTime(isDragging ? currentTime : hoverTime) }}

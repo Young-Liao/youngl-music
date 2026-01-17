@@ -1,16 +1,19 @@
 .main-controls {
     display: flex;
     align-items: center;
-    justify-content: space-around; /* Distribute buttons across the whole width */
+    justify-content: space-around; /* Spread buttons to fill the bar */
     width: 100%;
-    max-width: none; /* Ensure no limit */
+    max-width: none;
     margin: 0;
+    padding: 0 10px;
 }
 
 .controls-wrapper {
     width: 100%;
-    padding: 0 10px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 /* Buttons grow slightly to fill space if needed, or stay fixed */

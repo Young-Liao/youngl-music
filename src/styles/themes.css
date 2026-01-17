@@ -2,42 +2,34 @@
     --transition-speed: 0.6s;
 }
 
-/* Theme 1: Obsidian Blue (Deep & Professional) */
 .theme-sunset {
-    --accent-primary: #3b82f6;
-    --accent-secondary: #1d4ed8;
-    --bg-glow-1: rgba(59, 130, 246, 0.25);
-    --bg-glow-2: rgba(29, 78, 216, 0.15);
-    --text-glow: rgba(59, 130, 246, 0.4);
-    --progress-fill: linear-gradient(90deg, #3b82f6, #60a5fa);
+    --bg-gradient: linear-gradient(135deg, #1e1e2e 0%, #312e81 50%, #4c1d95 100%);
+    --accent-primary: #818cf8;
+    --accent-text: #ffffff; /* White text on indigo */
+    --text-glow: rgba(129, 140, 248, 0.5);
+    --progress-fill: #818cf8;
 }
 
-/* Theme 2: Emerald Night (Sophisticated Green) */
 .theme-ocean {
-    --accent-primary: #10b981;
-    --accent-secondary: #047857;
-    --bg-glow-1: rgba(16, 185, 129, 0.2);
-    --bg-glow-2: rgba(6, 78, 59, 0.15);
-    --text-glow: rgba(16, 185, 129, 0.4);
-    --progress-fill: linear-gradient(90deg, #10b981, #34d399);
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #0891b2 100%);
+    --accent-primary: #22d3ee;
+    --accent-text: #000000; /* Dark text on bright cyan */
+    --text-glow: rgba(34, 211, 238, 0.5);
+    --progress-fill: #22d3ee;
 }
 
-/* Theme 3: Rosewood (Warm & Elegant) */
 .theme-midnight {
-    --accent-primary: #f43f5e;
-    --accent-secondary: #9f1239;
-    --bg-glow-1: rgba(244, 63, 94, 0.2);
-    --bg-glow-2: rgba(159, 18, 57, 0.15);
-    --text-glow: rgba(244, 63, 94, 0.4);
-    --progress-fill: linear-gradient(90deg, #f43f5e, #fb7185);
+    --bg-gradient: linear-gradient(135deg, #09090b 0%, #27272a 50%, #09090b 100%);
+    --accent-primary: #fafafa;
+    --accent-text: #000000; /* Black text on white box */
+    --text-glow: rgba(255, 255, 255, 0.3);
+    --progress-fill: #ffffff;
 }
 
-/* Theme 4: Amethyst (Luxury Purple) */
 .theme-gold {
-    --accent-primary: #a855f7;
-    --accent-secondary: #7e22ce;
-    --bg-glow-1: rgba(168, 85, 247, 0.2);
-    --bg-glow-2: rgba(126, 34, 206, 0.15);
-    --text-glow: rgba(168, 85, 247, 0.4);
-    --progress-fill: linear-gradient(90deg, #a855f7, #c084fc);
+    --bg-gradient: linear-gradient(135deg, #1c1917 0%, #78350f 50%, #451a03 100%);
+    --accent-primary: #fbbf24;
+    --accent-text: #000000; /* Dark text on amber */
+    --text-glow: rgba(251, 191, 36, 0.4);
+    --progress-fill: #fbbf24;
 }
