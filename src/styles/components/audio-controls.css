@@ -1,70 +1,82 @@
-.main-controls {
+.nyx-controls-deck {
     display: flex;
     align-items: center;
-    justify-content: space-around; /* Spread buttons to fill the bar */
+    justify-content: space-between;
     width: 100%;
-    max-width: none;
-    margin: 0;
-    padding: 0 10px;
+    padding: 10px 0;
+    transition: all 0.3s ease;
 }
 
-.controls-wrapper {
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.sector { display: flex; align-items: center; gap: 14px; flex: 1; }
+/* DECLINED WIDTH: gap reduced from 35px to 18px */
+.sector.center { flex: 1.5; justify-content: center; gap: 18px; }
+.sector.right { justify-content: flex-end; }
+
+/* --- MINI BUTTONS --- */
+.mini-btn {
+    background: transparent; border: none; color: var(--text-secondary);
+    font-size: 1.1rem; cursor: pointer; padding: 8px; border-radius: 10px; transition: 0.2s;
 }
+.mini-btn:hover { color: white; background: rgba(255, 255, 255, 0.05); }
+.mini-btn.active { color: var(--accent-primary); }
 
-/* Buttons grow slightly to fill space if needed, or stay fixed */
-.icon-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.5rem; /* Slightly larger */
-    cursor: pointer;
-    transition: all 0.2s;
-    padding: 10px; /* larger touch target */
+/* --- CORE TRANSPORT --- */
+.nav-btn {
+    background: none; border: none; color: white;
+    font-size: 1.5rem; opacity: 0.5; cursor: pointer; transition: 0.2s;
 }
+.nav-btn:hover { opacity: 1; transform: scale(1.1); }
 
-.icon-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); border-radius: 50%; }
-.icon-btn:active { transform: scale(0.9); }
-
-.play-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--text-primary);
-    color: #000;
-    border: none;
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+.hero-play-btn {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: white; border: none; color: black; font-size: 2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.play-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.4); }
-.play-btn:active { transform: scale(0.95); }
-.play-btn i.bi-play-fill { transform: translateX(2px); } /* Optical Center */
+.hero-play-btn.playing { background: var(--accent-primary); color: white; box-shadow: 0 0 20px var(--text-glow); }
 
-.util-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px; /* Space between util buttons */
-    margin-top: 5px;
+/* --- VOLUME (Right) --- */
+.horizontal-volume {
+    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px; transition: 0.3s;
 }
 
-.text-btn {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    background: transparent;
-    padding: 8px 16px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    transition: all 0.2s;
+/* DIRECT MUTE BUTTON */
+.mute-toggle {
+    background: none; border: none; padding: 0; margin: 0;
+    color: var(--text-secondary); cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; transition: color 0.2s;
 }
-.text-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: white; }
+.mute-toggle:hover { color: white; }
+
+.slider-capsule { position: relative; width: 100px; height: 18px; display: flex; align-items: center; }
+.track-base { position: absolute; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; }
+.track-fill { height: 100%; width: var(--vol-percent); background: white; border-radius: 2px; box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+.horizontal-volume:hover .track-fill { background: var(--accent-primary); box-shadow: 0 0 12px var(--text-glow); }
+
+.volume-input { -webkit-appearance: none; width: 100%; height: 100%; background: transparent; position: relative; z-index: 5; cursor: pointer; margin: 0; }
+.volume-input::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: white; border: 2px solid var(--accent-primary); opacity: 0; transition: 0.2s; }
+.horizontal-volume:hover .volume-input::-webkit-slider-thumb { opacity: 1; }
+
+/* --- RESPONSIVE: NARROW WINDOW --- */
+@media (max-width: 650px) {
+    .sector { gap: 8px; }
+    .sector.center { gap: 12px; }
+
+    .hero-play-btn { width: 50px; height: 50px; font-size: 1.5rem; }
+    .nav-btn { font-size: 1.2rem; }
+
+    .slider-capsule { width: 60px; }
+    .horizontal-volume { padding: 4px 10px; }
+
+    .mini-btn { font-size: 1rem; padding: 6px; }
+}
+
+@media (max-width: 450px) {
+    /* Hide utility icons if extremely narrow to prioritize playback */
+    .mini-btn { font-size: 0.9rem; }
+    .slider-capsule { width: 40px; }
+    .sector.center { gap: 8px; }
+}
