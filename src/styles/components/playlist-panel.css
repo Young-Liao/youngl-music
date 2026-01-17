@@ -313,3 +313,269 @@
     position: relative;
     width: 100%;
 }
+
+/* --- SELECTION TOOLBAR --- */
+.selection-toolbar {
+    height: 80px;
+    background: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 15px;
+    color: var(--accent-text);
+    font-weight: 700;
+    animation: slideDown 0.3s ease;
+}
+
+.tool-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.tool-btn:hover { background: rgba(0,0,0,0.1); }
+.tool-btn.delete:hover { background: #ff4d4d; color: white; }
+
+/* --- CONTEXT MENU --- */
+.song-actions {
+    position: relative;
+    padding: 10px;
+    cursor: pointer;
+}
+
+/* BLOCKER OVERLAY */
+.menu-overlay-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    z-index: 10000; /* Between the sidebar and the context menu */
+    cursor: default;
+}
+
+/* CONTEXT MENU POSITIONING */
+.context-menu {
+    position: absolute;
+    right: 10px;
+    top: 0; /* Align with the dots icon */
+    width: 170px;
+    background: rgba(25, 25, 25, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 6px;
+    z-index: 10001; /* Above the blocker */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+    animation: menuScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuScaleIn {
+    from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* SELECTION INDICATORS (REFINED) */
+.select-indicator {
+    width: 30px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+}
+
+.circle i {
+    font-size: 12px;
+    color: white;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s;
+}
+
+/* Filled state when chosen */
+.is-selected .circle {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 12px var(--text-glow);
+}
+
+.is-selected .circle i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Sidebar Row selection highlight */
+.song-item.is-selected {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Header Spacer for Toolbar */
+.spacer {
+    flex: 1;
+}
+
+.context-menu button {
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: white;
+    text-align: left;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.context-menu button:hover { background: rgba(255, 255, 255, 0.1); }
+.context-menu button.danger { color: #ff4d4d; }
+.context-menu .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+
+/* --- SELECTION INDICATORS --- */
+.select-indicator {
+    width: 24px;
+    margin-right: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.circle {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.is-selected .circle {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px var(--text-glow);
+}
+
+.song-item.is-selected {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* NOW PLAYING HIGHLIGHT */
+.song-item.is-playing {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.song-item.is-playing .song-title {
+    color: var(--accent-primary);
+    text-shadow: 0 0 10px var(--text-glow);
+}
+
+.playing-icon {
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.index-container {
+    width: 24px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+/* BLOCKER OVERLAY */
+.menu-overlay-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    z-index: 10000;
+    cursor: default;
+}
+
+/* CONTEXT MENU */
+.context-menu {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    width: 170px;
+    background: rgba(20, 20, 20, 0.98);
+    backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 6px;
+    z-index: 10001;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    animation: menuScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuScaleIn {
+    from { opacity: 0; transform: scale(0.95) translateX(10px); }
+    to { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+/* SELECTION (FILLED) CIRCLE */
+.is-selected .circle {
+    background: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 15px var(--text-glow);
+}
+
+.is-selected .circle i {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+}
+
+.circle i {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: 0.2s;
+}
+
+/* Row Hover Logic */
+.song-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+.song-item.is-playing:hover {
+    background: rgba(255, 255, 255, 0.06);
+}

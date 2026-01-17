@@ -7,3 +7,4 @@ An app to play music. Yeah.
 - [2026.1.13] The audio-dragging function.
 - [2026.1.14] up, and if the user drags when the audio is over, IT GOES WRONG. [FIXED 2026.1.16]
 - [2026.1.16] it flashes after dragging. (progress bar)
+- [2026.1.18] Context Menu goes wrong.
