@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {ref, computed} from "vue";
-import {isPaused, playbackMode, volume} from "../scripts/globals";
-import { toggleAudioPlayback } from "../scripts/playback/audio-playback.ts";
+import {isPaused, playbackHistory, playbackMode, playlist, volume} from "../scripts/globals";
+import {loadAudio, toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
+import {getNextValidAudio, getPrevValidAudio} from "../scripts/files/playlist.ts";
 
 const lastVolume = ref(volume.value || 80); // Store volume for unmuting
 
@@ -17,10 +18,13 @@ const toggleMute = () => {
 };
 
 const modeIcon = computed(() => {
-    switch(playbackMode.value) {
-        case 0: return 'bi-shuffle';
-        case 1: return 'bi-repeat';
-        default: return 'bi-repeat-1';
+    switch (playbackMode.value) {
+        case 0:
+            return 'bi-shuffle';
+        case 1:
+            return 'bi-repeat';
+        default:
+            return 'bi-repeat-1';
     }
 });
 
@@ -29,6 +33,19 @@ const volumeIcon = computed(() => {
     if (volume.value < 50) return 'bi-volume-down-fill';
     return 'bi-volume-up-fill';
 });
+
+const skipStart = async () => {
+    console.log(playlist.value);
+    let file = await getPrevValidAudio();
+    await loadAudio(file);
+}
+
+const skipEnd = async () => {
+    console.log(playlist.value);
+    let file = await getNextValidAudio(playbackMode.value);
+    await loadAudio(file);
+}
+
 </script>
 
 <template>
@@ -45,13 +62,19 @@ const volumeIcon = computed(() => {
 
         <!-- CENTER: Core Transport (Tighter gaps) -->
         <div class="sector center">
-            <button class="nav-btn"><i class="bi bi-skip-start-fill"></i></button>
+            <button class="nav-btn" @click.stop="skipStart"
+                    :class="playbackHistory.length > 1 ? 'nav-btn-hoverable' : ''">
+                <i class="bi bi-skip-start-fill"></i>
+            </button>
 
             <button class="hero-play-btn" @click="toggleAudioPlayback" :class="{ 'playing': !isPaused }">
                 <i :class="isPaused ? 'bi bi-play-fill' : 'bi bi-pause-fill'"></i>
             </button>
 
-            <button class="nav-btn"><i class="bi bi-skip-end-fill"></i></button>
+            <button class="nav-btn" @click.stop="skipEnd"
+                    :class="playlist.length > 1 ? 'nav-btn-hoverable' : ''">
+                <i class="bi bi-skip-end-fill"></i>
+            </button>
         </div>
 
         <!-- RIGHT: Environment (Horizontal + Click to Mute) -->

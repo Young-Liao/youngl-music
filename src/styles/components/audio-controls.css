@@ -25,7 +25,7 @@
     background: none; border: none; color: white;
     font-size: 1.5rem; opacity: 0.5; cursor: pointer; transition: 0.2s;
 }
-.nav-btn:hover { opacity: 1; transform: scale(1.1); }
+.nav-btn-hoverable:hover { opacity: 1; transform: scale(1.1); }
 
 .hero-play-btn {
     width: 64px; height: 64px; border-radius: 50%;

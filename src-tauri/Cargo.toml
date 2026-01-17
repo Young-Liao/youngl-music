@@ -27,4 +27,5 @@ tauri-plugin-fs = "2.0.0-rc"
 rodio = "0.21.1"
 walkdir = "2.5"
 audiotags = "0.5.0"
-base64 = "0.21" # To encode the image for the web
+base64 = "0.21"
+lazy_static = "1.5.0" # To encode the image for the web

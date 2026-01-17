@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use audiotags::Tag;
 use base64::{engine::general_purpose, Engine as _};
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
@@ -6,13 +7,14 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, State};
+use lazy_static::lazy_static;
 
 pub struct AudioState {
     sink: Arc<Mutex<Sink>>,
     is_paused: Arc<Mutex<AtomicBool>>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct AudioMetadata {
     pub title: Option<String>,
     pub artist: Option<String>,
@@ -55,12 +57,26 @@ pub fn spawn_playback_watcher(app_handle: AppHandle, state: &State<'_, AudioStat
     });
 }
 
-/// Get the metadata of multiple files.
+lazy_static! {
+    // Cache maps file path -> AudioMetadata
+    static ref METADATA_CACHE: Mutex<HashMap<String, AudioMetadata>> = Mutex::new(HashMap::new());
+}
+
 pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
-    match Tag::new().read_from_path(&path) {
+    // 1. Check if it's already in cache
+    {
+        let cache = METADATA_CACHE.lock().unwrap();
+        if let Some(data) = cache.get(path) {
+            return data.clone(); // Requires AudioMetadata to derive Clone
+        }
+    }
+
+    // 2. If not found, do the heavy lifting
+    let metadata = match Tag::new().read_from_path(&path) {
         Ok(tag) => {
             let cover_base64 = tag.album_cover().map(|cover| {
                 let b64 = general_purpose::STANDARD.encode(cover.data);
+                // Fix: use display format for mime_type, not Debug {:?}
                 format!("data:{:?};base64,{}", cover.mime_type, b64)
             });
             AudioMetadata {
@@ -71,19 +87,20 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
                 total_duration,
             }
         }
-        Err(_e) => {
-            // if cfg!(debug_assertions) {
-                // println!("Error occurred when getting metadata: {}", e);
-            // }
-            AudioMetadata {
-                title: None,
-                artist: None,
-                album: None,
-                cover: None,
-                total_duration,
-            }
-        }
-    }
+        Err(_) => AudioMetadata {
+            title: None,
+            artist: None,
+            album: None,
+            cover: None,
+            total_duration,
+        },
+    };
+
+    // 3. Save to cache for next time
+    let mut cache = METADATA_CACHE.lock().unwrap();
+    cache.insert(path.clone(), metadata.clone());
+
+    metadata
 }
 
 /// Get the metadata of some files.

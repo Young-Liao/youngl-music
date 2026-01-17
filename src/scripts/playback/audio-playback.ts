@@ -11,7 +11,7 @@ import {
 import {startProgressCollection, stopProgressCollection} from "./progress-controller.ts";
 import {listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
-import {getValidLastFile} from "../files/playback-history.ts";
+import {getValidLastFileFromHistory} from "../files/playback-history.ts";
 import {getNextValidAudio} from "../files/playlist.ts";
 
 /// Load the audio after choosing a file.
@@ -101,14 +101,14 @@ export const checkAudioAvailability = async (priority: string = 'playlist') => {
     if (priority === 'playlist') {
         file = await getNextValidAudio(playbackMode.value);
     } else {
-        file = await getValidLastFile();
+        file = await getValidLastFileFromHistory();
     }
 
     // 2. Fallthrough: If the primary failed, try the alternative
     if (file == null) {
         console.log(`Priority ${priority} failed, trying alternative...`);
         if (priority === 'playlist') {
-            file = await getValidLastFile();
+            file = await getValidLastFileFromHistory();
         } else {
             file = await getNextValidAudio(playbackMode.value);
         }

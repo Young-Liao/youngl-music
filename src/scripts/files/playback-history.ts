@@ -1,7 +1,7 @@
 import {playbackHistory} from "../globals.ts";
 import {exists} from "@tauri-apps/plugin-fs";
 
-export const getValidLastFile = async () => {
+export const getValidLastFileFromHistory = async () => {
     while (playbackHistory.value.length > 0) {
         const lastFile = playbackHistory.value[playbackHistory.value.length - 1];
 

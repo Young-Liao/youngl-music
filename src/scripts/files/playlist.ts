@@ -1,6 +1,7 @@
-import {currentIndex, playlist} from "../globals.ts";
+import {currentIndex, playbackHistory, playlist} from "../globals.ts";
 import { exists } from "@tauri-apps/plugin-fs";
 import {emit} from "@tauri-apps/api/event";
+import {getValidLastFileFromHistory} from "./playback-history.ts";
 
 /**
  * Adds multiple file paths to the playlist.
@@ -98,3 +99,20 @@ export const getNextValidAudio = async (mode: number): Promise<string | null> =>
 
     return null;
 };
+
+/**
+ * To get the previous file from the history.
+ */
+export const getPrevValidAudio = async () => {
+    if (playbackHistory.value.length == 0) return null;
+    console.log(playbackHistory.value.length);
+    playbackHistory.value.pop();
+    let attempt_history = getValidLastFileFromHistory();
+    if (attempt_history != null) {
+        playbackHistory.value.pop();
+        return attempt_history;
+    }
+
+    return null;
+}
+

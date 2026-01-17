@@ -10,13 +10,15 @@ const props = defineProps<{ isOpen: boolean }>();
 defineEmits(['close']);
 
 const playlistUpdated = ref(false);
+const isFetching = ref(false); // New: Loading state
 
 const audioList = ref<{
     title: string,
     artist: string,
     album: string,
     cover: string,
-    total_duration: number
+    total_duration: number,
+    path: string // Added to ensure stable keys for animation
 }[]>([])
 
 const shufflePlaylist = () => {
@@ -32,20 +34,33 @@ const shufflePlaylist = () => {
 };
 
 const refreshData = async () => {
-    playlistUpdated.value = false;
-    const metadata = await invoke<{
-        title: string,
-        artist: string,
-        album: string,
-        cover: string,
-        total_duration: number
-    }[]>('fetch_metadata', { paths: playlist.value });
+    if (playlist.value.length === 0) {
+        audioList.value = [];
+        return;
+    }
 
-    // Process titles
-    audioList.value = metadata.map((item, index) => ({
-        ...item,
-        title: item.title || playlist.value[index].split(/[\\/]/).pop() || "Unknown Title"
-    }));
+    isFetching.value = true; // Start Loading
+    playlistUpdated.value = false;
+
+    try {
+        const metadata = await invoke<{
+            title: string,
+            artist: string,
+            album: string,
+            cover: string,
+            total_duration: number
+        }[]>('fetch_metadata', { paths: playlist.value });
+
+        audioList.value = metadata.map((item, index) => ({
+            ...item,
+            path: playlist.value[index], // Crucial for TransitionGroup keys
+            title: item.title || playlist.value[index].split(/[\\/]/).pop() || "Unknown Title"
+        }));
+    } catch (e) {
+        console.error(e);
+    } finally {
+        isFetching.value = false; // End Loading
+    }
 }
 
 onMounted(async () => {
@@ -62,8 +77,8 @@ const addFiles = async () => {
     await handleSelectionNeeded();
 };
 
-watch(() => props.isOpen, () => {
-    if (playlistUpdated) {
+watch(() => props.isOpen, (newVal) => {
+    if (newVal && (playlistUpdated.value || audioList.value.length === 0)) {
         refreshData();
     }
 })
@@ -106,32 +121,51 @@ onMounted(async () => {
         </div>
 
         <div class="sidebar-content">
-            <div v-if="playlist.length === 0" class="empty-list">
+            <!-- 1. LOADING ANIMATION (Skeleton) -->
+            <div v-if="isFetching" class="loading-skeleton">
+                <div v-for="i in 8" :key="i" class="skeleton-item">
+                    <div class="skel-thumb"></div>
+                    <div class="skel-details">
+                        <div class="skel-line title"></div>
+                        <div class="skel-line artist"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div v-else-if="playlist.length === 0" class="empty-list">
                 <i class="bi bi-music-note-list"></i>
                 <p>No songs in queue</p>
             </div>
 
-            <div v-else class="song-list">
-                <div v-for="(song, idx) in audioList" :key="idx" class="song-item">
-                    <span class="song-idx">{{ (idx + 1).toString().padStart(2, '0') }}</span>
+            <!-- 2. LIST ANIMATION (Transition Group) -->
+            <div v-else class="song-list-container">
+                <TransitionGroup name="playlist-stagger">
+                    <div
+                        v-for="(song, idx) in audioList"
+                        :key="song.path"
+                        class="song-item"
+                        :style="{ '--i': idx }"
+                    >
+                        <span class="song-idx">{{ (idx + 1).toString().padStart(2, '0') }}</span>
 
-                    <!-- SONG COVER THUMBNAIL -->
-                    <div class="song-thumb">
-                        <img v-if="song.cover" :src="song.cover" class="thumb-img" alt="cover" />
-                        <div v-else class="thumb-placeholder">
-                            <i class="bi bi-music-note"></i>
+                        <div class="song-thumb">
+                            <img v-if="song.cover" :src="song.cover" class="thumb-img" alt="cover" />
+                            <div v-else class="thumb-placeholder">
+                                <i class="bi bi-music-note"></i>
+                            </div>
+                        </div>
+
+                        <div class="song-details">
+                            <span class="song-title" :title="song.title">{{ song.title }}</span>
+                            <span class="song-artist">{{ song.artist || 'Unknown Artist' }}</span>
+                        </div>
+
+                        <div class="song-actions">
+                            <i class="bi bi-three-dots"></i>
                         </div>
                     </div>
-
-                    <div class="song-details">
-                        <span class="song-title" :title="song.title">{{ song.title }}</span>
-                        <span class="song-artist">{{ song.artist || 'Unknown Artist' }}</span>
-                    </div>
-
-                    <div class="song-actions">
-                        <i class="bi bi-three-dots"></i>
-                    </div>
-                </div>
+                </TransitionGroup>
             </div>
         </div>
 

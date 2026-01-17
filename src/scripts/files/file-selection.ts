@@ -1,6 +1,6 @@
 import {open} from "@tauri-apps/plugin-dialog";
 import {emit} from "@tauri-apps/api/event";
-import {getValidLastFile} from "./playback-history.ts";
+import {getValidLastFileFromHistory} from "./playback-history.ts";
 
 /// This function uses a dialog to select an audio file.
 export const selectAudio = async () => {
@@ -21,7 +21,7 @@ export const handleSelectionNeeded = async () => {
 
 /// This function
 export const handleFileNeeded = async () => {
-    const file = await getValidLastFile();
+    const file = await getValidLastFileFromHistory();
     if (file == null) {
         console.log("Can't find a valid last file...");
         await handleSelectionNeeded()
