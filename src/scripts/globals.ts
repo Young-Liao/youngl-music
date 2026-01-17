@@ -1,5 +1,8 @@
 import { ref } from 'vue'
 
+/// Locks
+export const lockCurrentTime = ref(false);
+
 /// States
 export const isPaused = ref(true);
 export const currentTime = ref(0);

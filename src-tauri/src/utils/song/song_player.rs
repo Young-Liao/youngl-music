@@ -7,7 +7,6 @@ use tauri::{AppHandle, Emitter, State};
 
 pub struct AudioState {
     sink: Arc<Mutex<Sink>>,
-    is_ready: Arc<Mutex<AtomicBool>>,
     is_paused: Arc<Mutex<AtomicBool>>,
 }
 
@@ -20,7 +19,6 @@ pub fn get_audio_state() -> (OutputStream, AudioState) {
         AudioState {
             sink,
             is_paused: Arc::new(Mutex::new(AtomicBool::new(false))),
-            is_ready: Arc::new(Mutex::new(AtomicBool::new(false))),
         },
     )
 }
@@ -59,9 +57,9 @@ pub fn load_song(path: String, state: State<'_, AudioState>, app_handle: AppHand
     sink.stop();
     sink.clear();
     sink.append(source);
+    sink.play();
 
-    *state.is_ready.lock().unwrap().get_mut() = true;
-    *state.is_paused.lock().unwrap().get_mut() = true;
+    *state.is_paused.lock().unwrap().get_mut() = false;
 
     spawn_playback_watcher(app_handle, &state);
 

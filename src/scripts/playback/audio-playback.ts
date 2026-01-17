@@ -1,8 +1,8 @@
 import {invoke} from "@tauri-apps/api/core";
-import {currentTime, isPaused, noAudio, totalDuration} from "../globals.ts";
+import {currentTime, isPaused, lockCurrentTime, noAudio, playbackHistory, totalDuration} from "../globals.ts";
 import {startProgressCollection, stopProgressCollection} from "./progress-controller.ts";
 import {emit, listen} from "@tauri-apps/api/event";
-import {handleSelectionNeeded} from "../files/file-selection.ts";
+import {handleFileNeeded} from "../files/file-selection.ts";
 
 /// Load the audio after choosing a file.
 export const loadAudio = async (path: unknown) => {
@@ -11,9 +11,11 @@ export const loadAudio = async (path: unknown) => {
         await emit("audio-not-loaded");
     } else {
         noAudio.value = false;
-        isPaused.value = true;
+        isPaused.value = false;
         totalDuration.value = await invoke<number>('load_song', {path: path});
-        currentTime.value = 0;
+        if (!lockCurrentTime)
+            currentTime.value = 0;
+        playbackHistory.value.push(path as string);
         await emit("audio-loaded");
         console.log("The song has been loaded.")
     }
@@ -58,7 +60,7 @@ export const checkAudioAvailability = async () => {
 
                 // 2. Run setup and then the trigger
                 setupListeners()
-                    .then(() => handleSelectionNeeded())
+                    .then(() => handleFileNeeded())
                     .catch((e) => {
                         cleanup();
                         reject(e);
