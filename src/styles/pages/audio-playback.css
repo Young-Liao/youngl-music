@@ -1,0 +1,45 @@
+.playback-page {
+    width: 100%;
+    min-height: 100vh; /* Fill parent */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* Dark base background */
+    background-color: #0f0f0f;
+}
+
+/* A soft gradient blob behind the player */
+.ambient-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(221, 36, 118, 0.15) 0%, rgba(0,0,0,0) 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.player-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+
+    /* Glassmorphism Card Effect */
+    background: rgba(30, 30, 30, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    border-radius: 40px;
+    padding: 48px 32px;
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

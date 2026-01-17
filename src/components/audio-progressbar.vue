@@ -137,4 +137,4 @@ const formatTime = (time: number) => {
 
 </script>
 
-<style scoped src="../styles/progress-bar/progressbar-style.css"></style>
+<style scoped src="../styles/components/progressbar-style.css"></style>

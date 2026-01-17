@@ -4,7 +4,5 @@ import AudioPlayback from "./pages/audio-playback.vue";
 </script>
 
 <template>
-    <main class="container">
-        <AudioPlayback/>
-    </main>
+    <AudioPlayback/>
 </template>

@@ -79,8 +79,13 @@ export const checkAudioAvailability = async () => {
 
 /// Call Rust to toggle audio playback.
 export const toggleAudioPlayback = async () => {
+    let origin_no_audio = noAudio.value;
     if (!await checkAudioAvailability()) {
         console.log("Rejected. Not toggling...")
+    }
+    if (!noAudio.value && origin_no_audio) {
+        console.log("Chose one just now, not toggling...");
+        return;
     }
     isPaused.value = await invoke<boolean>('toggle_playback');
     if (isPaused.value) {

@@ -1,0 +1,61 @@
+.track-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto 30px auto; /* Centered with bottom margin */
+}
+
+.text-details {
+    margin-top: 24px;
+    text-align: center;
+    width: 100%; /* Ensure it spans the container to justify-center text */
+}
+
+/* The Album Art Card */
+.album-art-placeholder {
+    width: 260px;
+    height: 260px;
+    border-radius: 30px;
+    /* A deep, rich gradient mimicking "album art" */
+    background: linear-gradient(135deg, #1e1e24 0%, #2a2a35 100%);
+    position: relative;
+    box-shadow:
+            0 20px 50px -10px rgba(0,0,0,0.8), /* Deep shadow */
+            inset 0 0 0 1px rgba(255,255,255,0.1); /* Subtle rim light */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Inner Icon or Placeholder Graphic */
+.album-art-placeholder i {
+    font-size: 80px;
+    background: -webkit-linear-gradient(#eee, #333);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.3;
+}
+
+.track-info-container:hover .album-art-placeholder {
+    transform: scale(1.02) translateY(-5px);
+    box-shadow: 0 30px 60px -12px rgba(0,0,0,0.9);
+}
+
+.track-title {
+    font-family: var(--font-main);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+}
+
+.track-artist {
+    font-family: var(--font-main);
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}

@@ -12,9 +12,15 @@
   "app": {
     "windows": [
       {
-        "title": "youngl-music",
+        "title": "YoungL Music",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "minWidth": 393,
+        "minHeight": 741,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true
       }
     ],
     "security": {
