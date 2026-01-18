@@ -67,7 +67,9 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
     {
         let cache = METADATA_CACHE.lock().unwrap();
         if let Some(data) = cache.get(path) {
-            return data.clone(); // Requires AudioMetadata to derive Clone
+            let mut ret = data.clone();
+            ret.total_duration = total_duration;
+            return ret; // Requires AudioMetadata to derive Clone
         }
     }
 
@@ -136,6 +138,7 @@ pub fn load_song(
     if cfg!(debug_assertions) {
         println!("[DEBUG] Succeeded to load the song...");
     }
+    println!("TOT: {}", total_duration);
 
     Ok(get_metadata(&path, total_duration))
 }

@@ -8,6 +8,7 @@ import {getValidLastFileFromHistory} from "./playback-history.ts";
  * Ignores files already present to prevent duplicates.
  */
 export const addToPlayList = (paths: string[]) => {
+    console.log("What??");
     // 1. Create a Set of current paths for high-performance lookup
     const currentSet = new Set(playlist.value);
 
@@ -116,3 +117,26 @@ export const getPrevValidAudio = async () => {
     return null;
 }
 
+/**
+ * Removes multiple indices from the playlist and handles index shifting
+ */
+export const removeMultipleFromPlaylist = (indices: number[]) => {
+    // Sort descending to prevent index shifting during deletion
+    const sortedIndices = [...indices].sort((a, b) => b - a);
+
+    sortedIndices.forEach(index => {
+        playlist.value.splice(index, 1);
+        // Adjust currentIndex if necessary
+        if (index < currentIndex.value) {
+            currentIndex.value--;
+        } else if (index === currentIndex.value) {
+            // If we deleted the playing song, we stay at same index (which is now the next song)
+            // but we might need to clamp it
+            if (currentIndex.value >= playlist.value.length) {
+                currentIndex.value = Math.max(0, playlist.value.length - 1);
+            }
+        }
+    });
+
+    emit('refresh-playlist').then();
+};

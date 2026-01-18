@@ -313,193 +313,114 @@
     position: relative;
     width: 100%;
 }
+/* src/styles/components/playlist-panel.css updates */
 
-/* --- SELECTION TOOLBAR --- */
-.selection-toolbar {
-    height: 80px;
+/* --- ACTIVE & HIGHLIGHT --- */
+.song-item.is-active {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 0 15px var(--text-glow);
+}
+
+.song-item.is-active .song-title {
+    color: var(--accent-primary);
+}
+
+.playing-pulse {
+    animation: active-glow 2s infinite alternate ease-in-out;
+}
+
+@keyframes active-glow {
+    from { box-shadow: 0 0 5px var(--text-glow); }
+    to { box-shadow: 0 0 20px var(--text-glow); }
+}
+
+/* --- MULTI-SELECT --- */
+.action-icon-btn.active-mode {
     background: var(--accent-primary);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 15px;
     color: var(--accent-text);
-    font-weight: 700;
-    animation: slideDown 0.3s ease;
 }
 
-.tool-btn {
-    background: transparent;
-    border: none;
-    color: inherit;
-    font-size: 1.2rem;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+.selection-check {
+    margin-right: 12px;
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+}
+
+.song-item.is-selected {
+    background: rgba(var(--accent-primary), 0.15);
+}
+
+.selection-toolbar {
+    padding: 20px;
+    background: var(--surface-glass);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
+    border-top: 1px solid var(--surface-border);
 }
 
-.tool-btn:hover { background: rgba(0,0,0,0.1); }
-.tool-btn.delete:hover { background: #ff4d4d; color: white; }
+.delete-bulk-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    font-weight: 600;
+}
 
 /* --- CONTEXT MENU --- */
-.song-actions {
-    position: relative;
-    padding: 10px;
-    cursor: pointer;
-}
-
-/* BLOCKER OVERLAY */
-.menu-overlay-blocker {
+.custom-context-menu {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: transparent;
-    z-index: 10000; /* Between the sidebar and the context menu */
-    cursor: default;
-}
-
-/* CONTEXT MENU POSITIONING */
-.context-menu {
-    position: absolute;
-    right: 10px;
-    top: 0; /* Align with the dots icon */
-    width: 170px;
-    background: rgba(25, 25, 25, 0.98);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
+    z-index: 20000;
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     padding: 6px;
-    z-index: 10001; /* Above the blocker */
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-    animation: menuScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 180px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-@keyframes menuScaleIn {
-    from { opacity: 0; transform: scale(0.9) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* SELECTION INDICATORS (REFINED) */
-.select-indicator {
-    width: 30px;
-    margin-right: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.circle {
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    background: transparent;
-}
-
-.circle i {
-    font-size: 12px;
-    color: white;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s;
-}
-
-/* Filled state when chosen */
-.is-selected .circle {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 12px var(--text-glow);
-}
-
-.is-selected .circle i {
-    opacity: 1;
-    transform: scale(1);
-}
-
-/* Sidebar Row selection highlight */
-.song-item.is-selected {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-/* Header Spacer for Toolbar */
-.spacer {
-    flex: 1;
-}
-
-.context-menu button {
-    width: 100%;
-    padding: 10px 12px;
-    background: transparent;
-    border: none;
-    color: white;
-    text-align: left;
-    font-size: 0.85rem;
+.menu-item {
+    padding: 10px 14px;
     border-radius: 8px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 10px;
-    cursor: pointer;
+    font-size: 0.9rem;
+    color: white;
+    transition: background 0.2s;
 }
 
-.context-menu button:hover { background: rgba(255, 255, 255, 0.1); }
-.context-menu button.danger { color: #ff4d4d; }
-.context-menu .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
-
-/* --- SELECTION INDICATORS --- */
-.select-indicator {
-    width: 24px;
-    margin-right: 12px;
-    display: flex;
-    justify-content: center;
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.circle {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    transition: all 0.2s;
+.menu-item.delete:hover {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff6666;
 }
 
-.is-selected .circle {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 10px var(--text-glow);
-}
-
-.song-item.is-selected {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* NOW PLAYING HIGHLIGHT */
-.song-item.is-playing {
+.menu-divider {
+    height: 1px;
     background: rgba(255, 255, 255, 0.05);
+    margin: 4px 0;
+}/* Add to ../src/styles/components/playlist-panel.css */
+
+/* --- BREATHING GLOW --- */
+.song-item.is-current {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.song-item.is-playing {
+    border-color: var(--accent-primary);
+    animation: breathing-glow 3s infinite ease-in-out;
 }
 
 .song-item.is-playing .song-title {
@@ -507,75 +428,87 @@
     text-shadow: 0 0 10px var(--text-glow);
 }
 
-.playing-icon {
+@keyframes breathing-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--text-glow);
+        background: rgba(var(--accent-primary), 0.5);
+    }
+}
+
+/* --- MULTI SELECT --- */
+.action-icon-btn.active {
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-primary);
+}
+
+.select-indicator {
+    margin-right: 12px;
     color: var(--accent-primary);
     font-size: 1.1rem;
-    width: 24px;
-    display: flex;
-    justify-content: center;
 }
 
-.index-container {
-    width: 24px;
-    flex-shrink: 0;
-    margin-right: 4px;
+.song-item.is-selected {
+    background: rgba(var(--accent-primary), 0.2) !important;
 }
 
-/* BLOCKER OVERLAY */
-.menu-overlay-blocker {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: transparent;
-    z-index: 10000;
-    cursor: default;
+.modern-add-btn.delete-mode {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+.modern-add-btn.delete-mode:hover {
+    background: rgba(255, 68, 68, 0.1);
 }
 
-/* CONTEXT MENU */
+/* --- CONTEXT MENU --- */
 .context-menu {
-    position: absolute;
-    right: 10px;
-    top: 0;
-    width: 170px;
-    background: rgba(20, 20, 20, 0.98);
-    backdrop-filter: blur(30px) saturate(150%);
+    position: fixed;
+    z-index: 11000;
+    background: rgba(15, 15, 15, 0.95);
+    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 6px;
-    z-index: 10001;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-    animation: menuScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: menuFade 0.2s ease;
 }
 
-@keyframes menuScaleIn {
-    from { opacity: 0; transform: scale(0.95) translateX(10px); }
-    to { opacity: 1; transform: scale(1) translateX(0); }
+@keyframes menuFade {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-/* SELECTION (FILLED) CIRCLE */
-.is-selected .circle {
-    background: var(--accent-primary) !important;
-    border-color: var(--accent-primary) !important;
-    box-shadow: 0 0 15px var(--text-glow);
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: white;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
 }
 
-.is-selected .circle i {
-    opacity: 1 !important;
-    transform: scale(1) !important;
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.circle i {
-    opacity: 0;
-    transform: scale(0.5);
-    transition: 0.2s;
+.menu-item.danger {
+    color: #ff6b6b;
 }
 
-/* Row Hover Logic */
-.song-item:hover {
-    background: rgba(255, 255, 255, 0.03);
+.menu-item.danger:hover {
+    background: rgba(255, 107, 107, 0.1);
 }
-.song-item.is-playing:hover {
-    background: rgba(255, 255, 255, 0.06);
+
+.menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 4px 8px;
 }
