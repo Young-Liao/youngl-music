@@ -5620,6 +5620,7 @@ dependencies = [
  "audiotags",
  "base64 0.21.7",
  "lazy_static",
+ "regex",
  "rodio",
  "serde",
  "serde_json",
