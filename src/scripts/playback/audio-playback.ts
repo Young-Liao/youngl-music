@@ -7,12 +7,13 @@ import {
     noAudio,
     playbackHistory,
     playbackMode,
+    playlist,
 } from "../globals.ts";
 import {startProgressCollection, stopProgressCollection} from "./progress-controller.ts";
 import {listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
 import {getValidLastFileFromHistory} from "../files/playback-history.ts";
-import {getNextValidAudio} from "../files/playlist.ts";
+import {getNextValidAudio, getPrevValidAudio} from "../files/playlist.ts";
 
 /// Load the audio after choosing a file.
 export const loadAudio = async (path: unknown) => {
@@ -42,6 +43,10 @@ export const loadAudio = async (path: unknown) => {
         if (path !== playbackHistory.value[playbackHistory.value.length - 1])
             playbackHistory.value.push(path as string);
         console.log("The song has been loaded.")
+
+        await syncSystemMetadata();
+        await syncPlaybackStatus();
+
         return true;
     }
 }
@@ -147,5 +152,18 @@ export const toggleAudioPlayback = async () => {
     } else {
         startProgressCollection();
     }
+    await syncPlaybackStatus();
     console.log("State toggled. Is paused? ", isPaused.value);
+}
+
+export const skipStart = async () => {
+    console.log(playlist.value);
+    let file = await getPrevValidAudio();
+    await loadAudio(file);
+}
+
+export const skipEnd = async () => {
+    console.log(playlist.value);
+    let file = await getNextValidAudio(playbackMode.value, true);
+    await loadAudio(file);
 }

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import {ref, computed} from "vue";
+import {computed, ref} from "vue";
 import {isPaused, playbackHistory, playbackMode, playlist, volume} from "../scripts/globals";
-import {loadAudio, toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
-import {getNextValidAudio, getPrevValidAudio} from "../scripts/files/playlist.ts";
+import {skipEnd, skipStart, toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
 
 const lastVolume = ref(volume.value || 80); // Store volume for unmuting
 
@@ -33,18 +32,6 @@ const volumeIcon = computed(() => {
     if (volume.value < 50) return 'bi-volume-down-fill';
     return 'bi-volume-up-fill';
 });
-
-const skipStart = async () => {
-    console.log(playlist.value);
-    let file = await getPrevValidAudio();
-    await loadAudio(file);
-}
-
-const skipEnd = async () => {
-    console.log(playlist.value);
-    let file = await getNextValidAudio(playbackMode.value, true);
-    await loadAudio(file);
-}
 
 </script>
 

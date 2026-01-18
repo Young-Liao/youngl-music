@@ -4,8 +4,14 @@ import {ref} from "vue";
 import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
 import {currentTheme} from "./scripts/globals.ts";
+import { onMounted } from 'vue';
+import { initSystemMediaListeners } from './scripts/utils/system-api';
 
 const isPlaylistOpen = ref(false);
+
+onMounted(() => {
+    initSystemMediaListeners();
+});
 
 </script>
 
