@@ -30,7 +30,6 @@ export const loadAudio = async (path: unknown) => {
             cover: string,
             total_duration: number
         }>('load_song', {path: path});
-        console.log(metadata);
         currentMetadata.value = {
             title: metadata.title || path.split(/[\\/]/).pop() || "Unknown Title",
             artist: metadata.artist || "Unknown Artist",

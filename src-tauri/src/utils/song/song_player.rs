@@ -72,7 +72,7 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
     }
 
     // 2. If not found, do the heavy lifting
-    let metadata = match Tag::new().read_from_path(&path) {
+    let mut metadata = match Tag::new().read_from_path(&path) {
         Ok(tag) => {
             let cover_base64 = tag.album_cover().map(|cover| {
                 let b64 = general_purpose::STANDARD.encode(cover.data);
@@ -99,6 +99,7 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
     // 3. Save to cache for next time
     let mut cache = METADATA_CACHE.lock().unwrap();
     cache.insert(path.clone(), metadata.clone());
+    metadata.total_duration = total_duration;
 
     metadata
 }
