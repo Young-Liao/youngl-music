@@ -1,9 +1,9 @@
 <!-- src/components/playlist-panel.vue -->
 <script setup lang="ts">
-import { playlist, currentIndex, isPaused } from "../scripts/globals";
+import {playlist, currentIndex, isPaused, currentMetadata} from "../scripts/globals";
 import { handleSelectionNeeded } from "../scripts/files/file-selection.ts";
-import { onMounted, ref, watch, onUnmounted } from "vue";
-import {emit, listen} from "@tauri-apps/api/event";
+import { onMounted, ref, watch } from "vue";
+import { emit, listen } from "@tauri-apps/api/event";
 import { addToPlayList, shuffle } from "../scripts/files/playlist.ts";
 import { invoke } from "@tauri-apps/api/core";
 import { loadAudio } from "../scripts/playback/audio-playback.ts";
@@ -18,11 +18,6 @@ const isFetching = ref(false);
 const isSelectMode = ref(false);
 const selectedPaths = ref(new Set<string>());
 
-// --- Context Menu State ---
-const showMenu = ref(false);
-const menuPos = ref({ x: 0, y: 0 });
-const menuTargetIdx = ref(-1);
-
 const audioList = ref<{
     title: string,
     artist: string,
@@ -32,7 +27,6 @@ const audioList = ref<{
     path: string
 }[]>([])
 
-// Logic to check if a song is currently the one loaded
 const isActive = (path: string) => {
     return playlist.value[currentIndex.value] === path;
 };
@@ -49,43 +43,17 @@ const handleItemClick = async (song: any, idx: number) => {
     } else {
         currentIndex.value = idx;
         await loadAudio(song.path);
+        console.log(currentMetadata.value);
     }
 };
 
-const openContextMenu = (e: MouseEvent, idx: number) => {
-    e.preventDefault();
-    if (isSelectMode.value) return; // Disable context menu in select mode
-    menuTargetIdx.value = idx;
-    menuPos.value = { x: e.clientX, y: e.clientY };
-    showMenu.value = true;
-};
-
-const closeMenu = () => { showMenu.value = false; };
-
 const shufflePlaylist = () => {
     if (playlist.value.length <= 1) return;
-
     let newPlaylist = [...playlist.value];
     let newAudioList = [...audioList.value];
-
     shuffle(newPlaylist, newAudioList);
-
     playlist.value = newPlaylist;
     audioList.value = newAudioList;
-};
-
-const playNow = async () => {
-    currentIndex.value = menuTargetIdx.value;
-    await loadAudio(playlist.value[menuTargetIdx.value]);
-    closeMenu();
-};
-
-const deleteFromQueue = () => {
-    playlist.value.splice(menuTargetIdx.value, 1);
-    // Adjust index if we deleted something before the current playing song
-    if (menuTargetIdx.value < currentIndex.value) currentIndex.value--;
-    refreshData();
-    closeMenu();
 };
 
 const deleteSelected = () => {
@@ -113,7 +81,6 @@ const refreshData = async () => {
 }
 
 onMounted(() => {
-    window.addEventListener('click', closeMenu);
     listen('refresh-playlist', () => props.isOpen ? refreshData() : playlistUpdated.value = true);
     listen('file-selected', async (event) => {
         const path = event.payload;
@@ -126,7 +93,6 @@ onMounted(() => {
         }
     });
 });
-onUnmounted(() => window.removeEventListener('click', closeMenu));
 
 watch(() => props.isOpen, (newVal) => {
     if (newVal && (playlistUpdated.value || audioList.value.length === 0)) refreshData();
@@ -173,7 +139,6 @@ watch(() => props.isOpen, (newVal) => {
                             'is-selected': selectedPaths.has(song.path)
                         }"
                         @click="handleItemClick(song, idx)"
-                        @contextmenu="openContextMenu($event, idx)"
                         :style="{ '--i': idx }"
                     >
                         <div v-if="isSelectMode" class="select-indicator">
@@ -204,17 +169,6 @@ watch(() => props.isOpen, (newVal) => {
                 <i class="bi bi-plus-circle-dotted"></i>
                 <span>Import Audio</span>
             </button>
-        </div>
-
-        <!-- Context Menu -->
-        <div v-if="showMenu" class="context-menu" :style="{ top: menuPos.y + 'px', left: menuPos.x + 'px' }" @click.stop>
-            <div class="menu-item" @click="playNow">
-                <i class="bi bi-play-fill"></i> Play Now
-            </div>
-            <div class="menu-divider"></div>
-            <div class="menu-item danger" @click="deleteFromQueue">
-                <i class="bi bi-trash3"></i> Remove
-            </div>
         </div>
     </div>
 </template>

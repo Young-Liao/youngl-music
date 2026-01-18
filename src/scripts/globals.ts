@@ -2,11 +2,13 @@ import { ref } from 'vue'
 
 // Constants
 export const callWait = 50; // ms
+export const themes = ['theme-sunset', 'theme-ocean', 'theme-midnight', 'theme-gold'];
 
 /// Locks
 export const lockCurrentTime = ref(false);
 
 /// States
+export const currentTheme = ref('theme-sunset');
 export const isPaused = ref(true);
 export const currentTime = ref(0);
 export const noAudio = ref(true);

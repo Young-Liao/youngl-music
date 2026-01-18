@@ -435,7 +435,7 @@
     }
     50% {
         box-shadow: 0 0 20px var(--text-glow);
-        background: rgba(var(--accent-primary), 0.1);
+        background: rgba(var(--accent-primary), 0.5);
     }
 }
 

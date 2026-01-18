@@ -1,22 +1,25 @@
 <!-- src/App.vue -->
 <script setup lang="ts">
-import { ref } from "vue";
+import {ref} from "vue";
 import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
+import {currentTheme} from "./scripts/globals.ts";
 
 const isPlaylistOpen = ref(false);
 
 </script>
 
 <template>
-    <!-- The Global Playlist Button -->
-    <button class="global-playlist-trigger" @click="isPlaylistOpen = true" title="Open Queue">
-        <i class="bi bi-music-note-list"></i>
-    </button>
+    <div :class="currentTheme">
+        <!-- The Global Playlist Button -->
+        <button class="global-playlist-trigger" @click="isPlaylistOpen = true" title="Open Queue">
+            <i class="bi bi-music-note-list"></i>
+        </button>
 
-    <PlaylistPanel :isOpen="isPlaylistOpen" @close="isPlaylistOpen = false" />
+        <PlaylistPanel :isOpen="isPlaylistOpen" @close="isPlaylistOpen = false"/>
 
-    <AudioPlayback/>
+        <AudioPlayback/>
+    </div>
 </template>
 
 <style>

@@ -8,13 +8,11 @@ import AudioControls from "../components/audio-controls.vue";
 import TrackInfo from "../components/track-info.vue";
 import TitleBar from "../components/title-bar.vue";
 import LyricsView from "../components/lyrics-view.vue";
+import {currentTheme, themes} from "../scripts/globals.ts";
 
 const selected = ref<string | null>(null);
-const currentTheme = ref('theme-sunset');
 const isWide = ref(false);
 const showLyricsMobile = ref(false);
-
-const themes = ['theme-sunset', 'theme-ocean', 'theme-midnight', 'theme-gold'];
 
 // Updated logic: Wide mode is strictly for layout, not mobile toggle state
 const checkWindowSize = () => {
@@ -44,7 +42,7 @@ const toggleMobileView = () => {
 </script>
 
 <template>
-    <div class="window-shell" :class="currentTheme">
+    <div class="window-shell">
         <!-- The background gradient layer -->
         <div class="background-fx"></div>
 

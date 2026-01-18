@@ -67,12 +67,14 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
     {
         let cache = METADATA_CACHE.lock().unwrap();
         if let Some(data) = cache.get(path) {
-            return data.clone(); // Requires AudioMetadata to derive Clone
+            let mut ret = data.clone();
+            ret.total_duration = total_duration;
+            return ret; // Requires AudioMetadata to derive Clone
         }
     }
 
     // 2. If not found, do the heavy lifting
-    let mut metadata = match Tag::new().read_from_path(&path) {
+    let metadata = match Tag::new().read_from_path(&path) {
         Ok(tag) => {
             let cover_base64 = tag.album_cover().map(|cover| {
                 let b64 = general_purpose::STANDARD.encode(cover.data);
@@ -99,7 +101,6 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
     // 3. Save to cache for next time
     let mut cache = METADATA_CACHE.lock().unwrap();
     cache.insert(path.clone(), metadata.clone());
-    metadata.total_duration = total_duration;
 
     metadata
 }
@@ -137,6 +138,7 @@ pub fn load_song(
     if cfg!(debug_assertions) {
         println!("[DEBUG] Succeeded to load the song...");
     }
+    println!("TOT: {}", total_duration);
 
     Ok(get_metadata(&path, total_duration))
 }
