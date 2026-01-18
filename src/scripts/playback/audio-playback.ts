@@ -122,7 +122,7 @@ export const checkAudioAvailability = async (priority: string = 'playlist', noHi
 
     // 3. No invalid file: let the user choose and add to the playlist.
     if (file == null && !noHistory) {
-        let res = await getFromFile();
+        const res = await getFromFile();
         if (res) {
             file = await getNextValidAudio(playbackMode.value);
         }
@@ -133,7 +133,7 @@ export const checkAudioAvailability = async (priority: string = 'playlist', noHi
 
 /// Call Rust to toggle audio playback.
 export const toggleAudioPlayback = async () => {
-    let origin_no_audio = noAudio.value;
+    const origin_no_audio = noAudio.value;
     if (!await checkAudioAvailability()) {
         console.log("Rejected. Not toggling...")
     }

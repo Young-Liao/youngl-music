@@ -1,10 +1,5 @@
 <script setup lang="ts">
 import {currentMetadata} from "../scripts/globals.ts";
-
-const props = defineProps<{
-    path: string | null
-}>();
-
 </script>
 
 <template>

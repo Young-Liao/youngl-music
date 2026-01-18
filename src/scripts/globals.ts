@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import {ref} from 'vue'
+import {PlaybackMode, SongMetadata} from "../types.ts";
 
 // Constants
 export const callWait = 50; // ms
@@ -16,12 +17,12 @@ export const volume = ref(80.); // 0-100
 
 export const playbackHistory = ref<string[]>([]);
 
-export const playbackMode = ref(1);
+export const playbackMode = ref<PlaybackMode>(PlaybackMode.RepeatAll);
 export const playlist = ref<string[]>([]); // The new global playlist
 export const currentIndex = ref(-1);
 
 /// Data
-export const currentMetadata = ref({
+export const currentMetadata = ref<SongMetadata>({
     title: 'No Audio Selected',
     artist: 'Unknown Artist',
     cover: null as string | null,

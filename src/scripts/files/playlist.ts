@@ -1,7 +1,8 @@
 import {currentIndex, playbackHistory, playlist} from "../globals.ts";
-import { exists } from "@tauri-apps/plugin-fs";
+import {exists} from "@tauri-apps/plugin-fs";
 import {emit} from "@tauri-apps/api/event";
 import {getValidLastFileFromHistory} from "./playback-history.ts";
+import {PlaybackMode} from "../../types.ts";
 
 /**
  * Adds multiple file paths to the playlist.
@@ -60,16 +61,16 @@ const removeFile = (index: number) => {
 /**
  * Implementation with auto-cleanup and shuffle re-sync
  */
-export const getNextValidAudio = async (mode: number, must: boolean = false): Promise<string | null> => {
+export const getNextValidAudio = async (mode: PlaybackMode, must: boolean = false): Promise<string | null> => {
     if (playlist.value.length === 0) return null;
 
     let attempts = 0;
     // We loop until we find a valid file or empty the list
     while (playlist.value.length > 0 && attempts < playlist.value.length) {
         // 1. Calculate Pointers based on Mode
-        if (mode === 2 && !must) {
+        if (mode === PlaybackMode.RepeatOne && !must) {
             // Repeat 1 logic: stay on current index unless we are forced to skip
-        } else if (mode === 0) {
+        } else if (mode === PlaybackMode.Shuffle) {
             currentIndex.value = Math.floor(Math.random() * playlist.value.length);
         } else {
             // Repeat All / Order
@@ -91,7 +92,7 @@ export const getNextValidAudio = async (mode: number, must: boolean = false): Pr
                 attempts = 0;
                 if (mode === 2) mode = 1; // Fallback to "Repeat All" logic if Repeat 1 file is gone
             }
-        } catch (err) {
+        } catch (_err) {
             removeFile(currentIndex.value);
             attempts++;
         }
@@ -107,7 +108,7 @@ export const getPrevValidAudio = async () => {
     if (playbackHistory.value.length == 0) return null;
     console.log(playbackHistory.value.length);
     playbackHistory.value.pop();
-    let attempt_history = getValidLastFileFromHistory();
+    const attempt_history = getValidLastFileFromHistory();
     if (attempt_history != null) {
         playbackHistory.value.pop();
         return attempt_history;
