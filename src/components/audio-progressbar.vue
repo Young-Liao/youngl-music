@@ -104,7 +104,7 @@ const startScrub = async (e: MouseEvent) => {
         let now_value = currentTime.value;
         try {
             lockCurrentTime.value = true;
-            if (await checkAudioAvailability()) {
+            if (await checkAudioAvailability('history')) {
                 if (now_value > currentMetadata.value.totalDuration) {
                     console.log("Position gets out of bound.")
                 } else {

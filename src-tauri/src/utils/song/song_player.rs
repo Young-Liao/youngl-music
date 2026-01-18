@@ -143,6 +143,15 @@ pub fn load_song(
     Ok(get_metadata(&path, total_duration))
 }
 
+/// Clear the playback.
+#[tauri::command]
+pub fn stop_song(state: State<'_, AudioState>) -> Result<(), String> {
+    let sink = state.sink.lock().unwrap();
+    sink.stop();
+    sink.clear();
+    Ok(())
+}
+
 /// Toggle playback.
 /// Return a boolean meaning that if the playback is paused.
 #[tauri::command]

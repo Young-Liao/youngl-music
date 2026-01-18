@@ -52,7 +52,13 @@ export const resetStates = async () => {
     noAudio.value = true;
     isPaused.value = true;
     currentTime.value = 0;
-    await checkAudioAvailability();
+    currentMetadata.value = {
+        title: 'No Audio Selected',
+        artist: 'Unknown Artist',
+        cover: null as string | null,
+        totalDuration: 0,
+    };
+    await checkAudioAvailability('playlist', true);
 }
 
 const getFromFile = async () => {
@@ -85,7 +91,7 @@ const getFromFile = async () => {
 };
 
 /// Check if there's an available audio to play. If not, let the user choose one, and then START PLAYING
-export const checkAudioAvailability = async (priority: string = 'playlist') => {
+export const checkAudioAvailability = async (priority: string = 'playlist', noHistory = false) => {
     console.log("Checking audio availability...");
 
     // If audio is already loaded and ready, we are good.
@@ -107,14 +113,15 @@ export const checkAudioAvailability = async (priority: string = 'playlist') => {
     if (file == null) {
         console.log(`Priority ${priority} failed, trying alternative...`);
         if (priority === 'playlist') {
-            file = await getValidLastFileFromHistory();
+            if (!noHistory)
+                file = await getValidLastFileFromHistory();
         } else {
             file = await getNextValidAudio(playbackMode.value);
         }
     }
 
     // 3. No invalid file: let the user choose and add to the playlist.
-    if (file == null) {
+    if (file == null && !noHistory) {
         let res = await getFromFile();
         if (res) {
             file = await getNextValidAudio(playbackMode.value);

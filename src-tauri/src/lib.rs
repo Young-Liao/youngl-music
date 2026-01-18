@@ -11,6 +11,7 @@ pub fn run() {
         .manage(audio_state)
         .invoke_handler(tauri::generate_handler![
             utils::song::load_song,
+            utils::song::stop_song,
             utils::song::toggle_playback,
             utils::song::fetch_progress,
             utils::song::set_position,

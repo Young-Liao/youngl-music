@@ -5,7 +5,7 @@ import { onMounted, ref, watch } from "vue";
 import { emit, listen } from "@tauri-apps/api/event";
 import { addToPlayList, shuffle } from "../scripts/files/playlist.ts";
 import { invoke } from "@tauri-apps/api/core";
-import { loadAudio } from "../scripts/playback/audio-playback.ts";
+import {loadAudio, resetStates} from "../scripts/playback/audio-playback.ts";
 
 const props = defineProps<{ isOpen: boolean }>();
 defineEmits(['close']);
@@ -48,14 +48,26 @@ const handleItemClick = async (song: any, idx: number) => {
 
 const shufflePlaylist = () => {
     if (playlist.value.length <= 1) return;
+
+    let originPlay = playlist.value[currentIndex.value];
+
     let newPlaylist = [...playlist.value];
     let newAudioList = [...audioList.value];
     shuffle(newPlaylist, newAudioList);
+
+    currentIndex.value = -1;
+
     playlist.value = newPlaylist;
     audioList.value = newAudioList;
+
+    currentIndex.value = playlist.value.findIndex((item) => item == originPlay);
 };
 
 const deleteSelected = () => {
+    let current = playlist.value[currentIndex.value];
+    if (selectedPaths.value.has(current)) {
+        invoke('stop_song').then(resetStates);
+    }
     playlist.value = playlist.value.filter(path => !selectedPaths.value.has(path));
     selectedPaths.value.clear();
     isSelectMode.value = false;
