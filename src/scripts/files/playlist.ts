@@ -26,7 +26,7 @@ export const addToPlayList = (paths: string[]) => {
 
     // 6. If it was empty, ensure we point to the first newly added song
     if (wasEmpty) {
-        currentIndex.value = 0;
+        currentIndex.value = -1;
     }
 
     emit('refresh-playlist').then();
@@ -60,12 +60,22 @@ const removeFile = (index: number) => {
 /**
  * Implementation with auto-cleanup and shuffle re-sync
  */
-export const getNextValidAudio = async (mode: number): Promise<string | null> => {
+export const getNextValidAudio = async (mode: number, must: boolean = false): Promise<string | null> => {
     if (playlist.value.length === 0) return null;
 
     let attempts = 0;
     // We loop until we find a valid file or empty the list
     while (playlist.value.length > 0 && attempts < playlist.value.length) {
+        // 1. Calculate Pointers based on Mode
+        if (mode === 2 && !must) {
+            // Repeat 1 logic: stay on current index unless we are forced to skip
+        } else if (mode === 0) {
+            currentIndex.value = Math.floor(Math.random() * playlist.value.length);
+        } else {
+            // Repeat All / Order
+            currentIndex.value = (currentIndex.value + 1) % playlist.value.length;
+        }
+
         const currentPath = playlist.value[currentIndex.value];
 
         // 2. Validate existence
@@ -84,16 +94,6 @@ export const getNextValidAudio = async (mode: number): Promise<string | null> =>
         } catch (err) {
             removeFile(currentIndex.value);
             attempts++;
-        }
-
-        // 1. Calculate Pointers based on Mode
-        if (mode === 2) {
-            // Repeat 1 logic: stay on current index unless we are forced to skip
-        } else if (mode === 0) {
-            currentIndex.value = Math.floor(Math.random() * playlist.value.length);
-        } else {
-            // Repeat All / Order
-            currentIndex.value = (currentIndex.value + 1) % playlist.value.length;
         }
     }
 
@@ -115,3 +115,27 @@ export const getPrevValidAudio = async () => {
 
     return null;
 }
+
+/**
+ * Removes multiple indices from the playlist and handles index shifting
+ */
+export const removeMultipleFromPlaylist = (indices: number[]) => {
+    // Sort descending to prevent index shifting during deletion
+    const sortedIndices = [...indices].sort((a, b) => b - a);
+
+    sortedIndices.forEach(index => {
+        playlist.value.splice(index, 1);
+        // Adjust currentIndex if necessary
+        if (index < currentIndex.value) {
+            currentIndex.value--;
+        } else if (index === currentIndex.value) {
+            // If we deleted the playing song, we stay at same index (which is now the next song)
+            // but we might need to clamp it
+            if (currentIndex.value >= playlist.value.length) {
+                currentIndex.value = Math.max(0, playlist.value.length - 1);
+            }
+        }
+    });
+
+    emit('refresh-playlist').then();
+};

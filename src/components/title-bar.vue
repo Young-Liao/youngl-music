@@ -21,13 +21,13 @@ const startWindowDrag = async () => {
 
         <!-- STOP Mousedown propagation here so buttons work -->
         <div class="traffic-lights" @mousedown.stop>
-            <button class="win-btn close" @click="close">
+            <button class="win-btn close" @click.stop="close">
                 <i class="bi bi-x"></i>
             </button>
-            <button class="win-btn min" @click="minimize">
+            <button class="win-btn min" @click.stop="minimize">
                 <i class="bi bi-dash"></i>
             </button>
-            <button class="win-btn max" @click="toggleMax">
+            <button class="win-btn max" @click.stop="toggleMax">
                 <i class="bi bi-fullscreen"></i>
             </button>
         </div>

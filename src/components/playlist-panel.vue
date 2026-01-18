@@ -65,10 +65,12 @@ const shufflePlaylist = () => {
 
 const deleteSelected = () => {
     let current = playlist.value[currentIndex.value];
+    playlist.value = playlist.value.filter(path => !selectedPaths.value.has(path));
     if (selectedPaths.value.has(current)) {
         invoke('stop_song').then(resetStates);
+    } else {
+        currentIndex.value = playlist.value.findIndex((item) => item == current);
     }
-    playlist.value = playlist.value.filter(path => !selectedPaths.value.has(path));
     selectedPaths.value.clear();
     isSelectMode.value = false;
     refreshData();
@@ -118,14 +120,14 @@ watch(() => props.isOpen, (newVal) => {
                     <i class="bi bi-collection-play"></i>
                     <span>Queue</span>
                 </div>
-                <button class="action-icon-btn" @click="toggleSelectMode" :class="{active: isSelectMode}" title="Multi-Select">
+                <button class="action-icon-btn" @click.stop="toggleSelectMode" :class="{active: isSelectMode}" title="Multi-Select">
                     <i class="bi bi-check2-all"></i>
                 </button>
-                <button v-if="playlist.length > 1 && !isSelectMode" class="action-icon-btn" @click="shufflePlaylist" title="Shuffle">
+                <button v-if="playlist.length > 1 && !isSelectMode" class="action-icon-btn" @click.stop="shufflePlaylist" title="Shuffle">
                     <i class="bi bi-shuffle"></i>
                 </button>
             </div>
-            <button class="close-panel-btn" @click="$emit('close')"><i class="bi bi-chevron-right"></i></button>
+            <button class="close-panel-btn" @click.stop="$emit('close')"><i class="bi bi-chevron-right"></i></button>
         </div>
 
         <div class="sidebar-content">
@@ -149,7 +151,7 @@ watch(() => props.isOpen, (newVal) => {
                             'is-playing': isActive(song.path) && !isPaused,
                             'is-selected': selectedPaths.has(song.path)
                         }"
-                        @click="handleItemClick(song, idx)"
+                        @click.stop="handleItemClick(song, idx)"
                         :style="{ '--i': idx }"
                     >
                         <div v-if="isSelectMode" class="select-indicator">
@@ -172,7 +174,7 @@ watch(() => props.isOpen, (newVal) => {
         </div>
 
         <div class="sidebar-footer">
-            <button v-if="isSelectMode" class="modern-add-btn delete-mode" @click="deleteSelected" :disabled="selectedPaths.size === 0">
+            <button v-if="isSelectMode" class="modern-add-btn delete-mode" @click.stop="deleteSelected" :disabled="selectedPaths.size === 0">
                 <i class="bi bi-trash3"></i>
                 <span>Remove Selected ({{ selectedPaths.size }})</span>
             </button>

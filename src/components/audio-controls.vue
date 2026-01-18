@@ -42,7 +42,7 @@ const skipStart = async () => {
 
 const skipEnd = async () => {
     console.log(playlist.value);
-    let file = await getNextValidAudio(playbackMode.value);
+    let file = await getNextValidAudio(playbackMode.value, true);
     await loadAudio(file);
 }
 
@@ -52,7 +52,7 @@ const skipEnd = async () => {
     <div class="nyx-controls-deck">
         <!-- LEFT: Utility -->
         <div class="sector left">
-            <button class="mini-btn active" @click="toggleMode">
+            <button class="mini-btn active" @click.stop="toggleMode">
                 <i :class="`bi ${modeIcon}`"></i>
             </button>
             <button class="mini-btn" title="Lyrics">
@@ -67,7 +67,7 @@ const skipEnd = async () => {
                 <i class="bi bi-skip-start-fill"></i>
             </button>
 
-            <button class="hero-play-btn" @click="toggleAudioPlayback" :class="{ 'playing': !isPaused }">
+            <button class="hero-play-btn" @click.stop="toggleAudioPlayback" :class="{ 'playing': !isPaused }">
                 <i :class="isPaused ? 'bi bi-play-fill' : 'bi bi-pause-fill'"></i>
             </button>
 
@@ -80,7 +80,7 @@ const skipEnd = async () => {
         <!-- RIGHT: Environment (Horizontal + Click to Mute) -->
         <div class="sector right">
             <div class="horizontal-volume" :style="{ '--vol-percent': volume + '%' }">
-                <button class="mute-toggle" @click="toggleMute">
+                <button class="mute-toggle" @click.stop="toggleMute">
                     <i :class="`bi ${volumeIcon}`"></i>
                 </button>
                 <div class="slider-capsule">

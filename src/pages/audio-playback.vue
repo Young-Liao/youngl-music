@@ -54,12 +54,12 @@ const toggleMobileView = () => {
                 <!-- Middle Section: Visuals and Lyrics -->
                 <div class="player-body">
                     <div class="left-pane">
-                        <div class="visual-container" @click="toggleMobileView"
+                        <div class="visual-container" @click.stop="toggleMobileView"
                              :class="{'hidden': !isWide && showLyricsMobile, 'clickable': !isWide}">
                             <TrackInfo :path="selected" />
                         </div>
 
-                        <div class="lyrics-mobile-container" @click="toggleMobileView"
+                        <div class="lyrics-mobile-container" @click.stop="toggleMobileView"
                              :class="{'active': !isWide && showLyricsMobile}">
                             <LyricsView />
                         </div>

@@ -12,7 +12,7 @@ const isPlaylistOpen = ref(false);
 <template>
     <div :class="currentTheme">
         <!-- The Global Playlist Button -->
-        <button class="global-playlist-trigger" @click="isPlaylistOpen = true" title="Open Queue">
+        <button class="global-playlist-trigger" @click.stop="isPlaylistOpen = true" title="Open Queue">
             <i class="bi bi-music-note-list"></i>
         </button>
 

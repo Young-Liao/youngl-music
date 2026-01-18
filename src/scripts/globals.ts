@@ -18,7 +18,7 @@ export const playbackHistory = ref<string[]>([]);
 
 export const playbackMode = ref(1);
 export const playlist = ref<string[]>([]); // The new global playlist
-export const currentIndex = ref(0);
+export const currentIndex = ref(-1);
 
 /// Data
 export const currentMetadata = ref({
