@@ -145,18 +145,16 @@ const handlePlaylistKeyDown = async (e: KeyboardEvent) => {
     switch (e.key) {
         case 'ArrowUp':
             e.preventDefault();
-            if (activeIndex.value > 0) {
-                activeIndex.value--;
-                scrollToItem(activeIndex.value);
-            }
+            activeIndex.value -= 1;
+            activeIndex.value %= audioList.value.length;
+            scrollToItem(activeIndex.value);
             break;
 
         case 'ArrowDown':
             e.preventDefault();
-            if (activeIndex.value < audioList.value.length - 1) {
-                activeIndex.value++;
-                scrollToItem(activeIndex.value);
-            }
+            activeIndex.value -= 1;
+            activeIndex.value %= audioList.value.length;
+            scrollToItem(activeIndex.value);
             break;
 
         case 'Enter':

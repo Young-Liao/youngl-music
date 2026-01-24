@@ -1,6 +1,6 @@
 import {skipEnd, skipStart, toggleAudioPlayback} from "../playback/audio-playback.ts";
 import {seekBackward, seekForward} from "../playback/progress-controller.ts";
-import {toggleMute} from "../controls/volume.ts";
+import {toggleMute, volumeDown, volumeUp} from "../controls/volume.ts";
 import {isPlaylistOpen} from "../globals.ts";
 
 const handleKeyDown = async (e: KeyboardEvent) => {
@@ -23,6 +23,18 @@ const handleKeyDown = async (e: KeyboardEvent) => {
 
         case "ArrowRight":
             await seekForward(5);
+            break;
+
+        case 'ArrowUp':
+            e.preventDefault()
+            if (!isPlaylistOpen.value)
+                volumeUp(5);
+            break;
+
+        case 'ArrowDown':
+            e.preventDefault()
+            if (!isPlaylistOpen.value)
+                volumeDown(5);
             break;
 
         case "MediaTrackPrevious":
