@@ -32,6 +32,8 @@ pub fn run() {
             utils::song::fetch_progress,
             utils::song::set_position,
             utils::song::fetch_metadata,
+            utils::song::load_lyrics_from_lrc,
+            utils::song::load_lyrics_from_song,
             utils::system::set_volume,
             utils::system::update_system_metadata,
             utils::system::update_system_status,

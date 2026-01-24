@@ -1,0 +1,119 @@
+/* lyrics-view.css */
+.lyrics-view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+
+.lyrics-container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+}
+
+.lyrics-container::-webkit-scrollbar { display: none; }
+
+.lyrics-wrapper {
+    padding: 50vh 10% 50vh 10%; /* 侧边留出空间给指示器 */
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* 基础歌词样式 */
+.lyric-item {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: white;
+    transition: all 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+    transform-origin: left center;
+    cursor: pointer;
+    filter: blur(0px);
+}
+
+/* 1. 当前播放中的样式：巨大、发光、呼吸 */
+.lyric-item.is-playing {
+    transform: scale(1.15);
+    opacity: 1;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
+    animation: lyric-breathe 3s ease-in-out infinite;
+}
+
+@keyframes lyric-breathe {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transform: scale(1.15); }
+    50% { opacity: 0.85; filter: drop-shadow(0 0 20px rgba(255,255,255,0.6)); transform: scale(1.17); }
+}
+
+/* 2. 手动滚动时对准的行：清晰且有背景感 */
+.lyric-item.is-hovered {
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+/* 3. 其它行：变小、变暗、变虚 */
+.lyric-item.is-dimmed {
+    opacity: 0.2;
+    transform: scale(0.85);
+    filter: blur(1.5px);
+}
+
+/* --- 侧边指示器 (iTunes Style) --- */
+.side-seek-bar {
+    position: absolute;
+    right: 30px; /* 放在右侧 */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.side-seek-bar.active {
+    opacity: 1;
+}
+
+.time-tag {
+    font-family: 'Monaco', monospace;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.indicator-line {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(to left, white, transparent);
+    border-top: 1px dashed rgba(255,255,255,0.5);
+}
+
+.play-trigger {
+    width: 28px;
+    height: 28px;
+    background: white;
+    color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.play-trigger svg {
+    width: 14px;
+    margin-left: 2px;
+}

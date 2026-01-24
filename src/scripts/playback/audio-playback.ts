@@ -15,6 +15,7 @@ import {handleFileNeeded} from "../files/file-selection.ts";
 import {getValidLastFileFromHistory} from "../files/playback-history.ts";
 import {getNextValidAudio, getPrevValidAudio} from "../files/playlist.ts";
 import {syncPlaybackStatus, syncSystemMetadata} from "../utils/system-api.ts";
+import {fetchLyricsFromSong} from "./lyrics-handler.ts";
 
 /// Load the audio after choosing a file.
 export const loadAudio = async (path: unknown) => {
@@ -25,6 +26,7 @@ export const loadAudio = async (path: unknown) => {
     } else {
         noAudio.value = false;
         isPaused.value = false;
+
         const metadata = await invoke<{
             title: string,
             artist: string,
@@ -38,6 +40,7 @@ export const loadAudio = async (path: unknown) => {
             cover: metadata.cover, // This is our Base64 string
             totalDuration: metadata.total_duration,
         };
+
         if (!lockCurrentTime)
             currentTime.value = 0;
         startProgressCollection();
@@ -47,6 +50,7 @@ export const loadAudio = async (path: unknown) => {
 
         await syncSystemMetadata();
         await syncPlaybackStatus();
+        await fetchLyricsFromSong(path as string);
 
         return true;
     }

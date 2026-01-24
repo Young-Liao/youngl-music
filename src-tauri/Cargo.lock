@@ -5892,7 +5892,10 @@ version = "0.1.0"
 dependencies = [
  "audiotags",
  "base64 0.21.7",
+ "id3",
  "lazy_static",
+ "metaflac",
+ "mp4ameta",
  "regex",
  "rodio",
  "serde",

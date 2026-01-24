@@ -9,8 +9,9 @@ const handleKeyDown = async (e: KeyboardEvent) => {
     const { key, ctrlKey } = e;
 
     switch (key) {
-        case "tab":
+        case "Tab":
             e.preventDefault(); // Disables the focus move
+            e.stopPropagation();
             break;
         case " ":
             e.preventDefault();

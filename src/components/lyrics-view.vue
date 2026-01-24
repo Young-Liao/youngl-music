@@ -1,21 +1,33 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onUnmounted } from 'vue';
 import { currentMetadata, currentTime } from '../scripts/globals';
+import { setPosition } from "../scripts/playback/progress-controller.ts";
 
 const scrollContainer = ref<HTMLElement | null>(null);
 const lyricElements = ref<HTMLElement[]>([]);
 
-const activeIndex = ref(-1);         // 当前播放行
-const userHoverIndex = ref(-1);      // 滚轮指向行
-const isUserScrolling = ref(false);  // 是否正在手动滚动
+const activeIndex = ref(-1);
+const userHoverIndex = ref(-1);
+const isUserScrolling = ref(false);
+const isSeeking = ref(false); // New flag to prevent snap-back
 
 let scrollTimeout: any = null;
 let animationFrameId: number | null = null;
 
-// 平滑滚动逻辑 (保持 600ms，手感最接近 iOS)
+const handleManualSeek = (time: number) => {
+    isSeeking.value = true;
+    setPosition(time);
+
+    // Briefly keep auto-scroll disabled to let the player update
+    setTimeout(() => {
+        isSeeking.value = false;
+        isUserScrolling.value = false;
+    }, 20);
+};
+
 const gentleScrollTo = (target: number) => {
     const container = scrollContainer.value;
-    if (!container) return;
+    if (!container || isUserScrolling.value || isSeeking.value) return;
 
     const start = container.scrollTop;
     const change = target - start;
@@ -24,18 +36,20 @@ const gentleScrollTo = (target: number) => {
 
     const animate = (now: number) => {
         const elapsed = now - startTime;
-        const progress = Math.min(elapsed / 600, 1);
+        const progress = Math.min(elapsed / 800, 1); // Increased to 800ms for "gentle" feel
         container.scrollTop = start + change * easeOutCubic(progress);
-        if (progress < 1) animationFrameId = requestAnimationFrame(animate);
+        if (progress < 1 && !isUserScrolling.value) {
+            animationFrameId = requestAnimationFrame(animate);
+        }
     };
 
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     animationFrameId = requestAnimationFrame(animate);
 };
 
-// 监听播放进度
 watch(() => currentTime.value, (newTime) => {
-    if (isUserScrolling.value) return; // 手动滚动时不自动对齐
+    // Prevent auto-scroll if user is interacting or a seek just happened
+    if (isUserScrolling.value || isSeeking.value) return;
 
     const lines = currentMetadata.value?.lyrics || [];
     let index = -1;
@@ -57,9 +71,9 @@ watch(() => currentTime.value, (newTime) => {
     }
 });
 
-// 手动滚动处理
 const startManualScroll = () => {
     isUserScrolling.value = true;
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
     clearTimeout(scrollTimeout);
 };
 
@@ -73,6 +87,7 @@ const onScroll = () => {
     let minDistance = Infinity;
 
     lyricElements.value.forEach((el, index) => {
+        if (!el) return;
         const centerOfEl = el.offsetTop + (el.clientHeight / 2);
         const distance = Math.abs(centerPoint - centerOfEl);
         if (distance < minDistance) {
@@ -83,12 +98,15 @@ const onScroll = () => {
 
     userHoverIndex.value = closestIndex;
 
-    // 停止操作 1.5秒后恢复自动对齐并隐藏时间轴
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
-        isUserScrolling.value = false;
+        const selectedLine = currentMetadata.value?.lyrics?.[userHoverIndex.value];
+        if (selectedLine && isUserScrolling.value) {
+            handleManualSeek(selectedLine.time);
+        }
+        // userHoverIndex reset is handled after seek to avoid flicker
         userHoverIndex.value = -1;
-    }, 1500);
+    }, 800);
 };
 
 const formatTime = (seconds: number) => {
@@ -98,20 +116,25 @@ const formatTime = (seconds: number) => {
 };
 
 onUnmounted(() => {
-    cancelAnimationFrame(animationFrameId!);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
     clearTimeout(scrollTimeout);
 });
 </script>
 
 <template>
     <div class="lyrics-view">
-        <!-- 手动滚动指示器：仅在手动时显示 -->
         <div class="seek-indicator" :class="{ 'show': isUserScrolling }">
-            <div class="line"></div>
-            <div class="time-box">
+            <div class="seek-time">
                 {{ formatTime(currentMetadata.lyrics?.[userHoverIndex]?.time || 0) }}
             </div>
-            <div class="line"></div>
+            <div class="seek-line"></div>
+            <!-- Added click event: Clicking the icon triggers seek immediately -->
+            <div
+                class="seek-play"
+                @click="handleManualSeek(currentMetadata.lyrics?.[userHoverIndex]?.time || 0)"
+            >
+                <i class="bi bi-play-circle" style="font-size: 16px;"></i>
+            </div>
         </div>
 
         <div
@@ -129,15 +152,15 @@ onUnmounted(() => {
                     class="lyric-line"
                     :class="{
                         'active': index === activeIndex && !isUserScrolling,
-                        'dimmed': (index !== activeIndex && !isUserScrolling) || (isUserScrolling && index !== userHoverIndex),
-                        'highlight': isUserScrolling && index === userHoverIndex
+                        'highlight': isUserScrolling && index === userHoverIndex,
+                        'dimmed': (index !== activeIndex && !isUserScrolling) || (isUserScrolling && index !== userHoverIndex)
                     }"
                 >
                     {{ line.text }}
                 </p>
-                <p v-if="!currentMetadata.lyrics?.length" class="lyric-line active">
-                    Waiting for lyrics...
-                </p>
+                <div v-if="!currentMetadata.lyrics?.length" class="lyric-line active">
+                    Instrumental
+                </div>
             </div>
         </div>
     </div>
@@ -149,7 +172,7 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    /* 你的背景色或者是透明 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .lyrics-container {
@@ -157,7 +180,6 @@ onUnmounted(() => {
     height: 100%;
     overflow-y: auto;
     scrollbar-width: none;
-    -ms-overflow-style: none;
     mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
 }
@@ -168,79 +190,88 @@ onUnmounted(() => {
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 16px; /* 恢复你的 16px 间距 */
-    padding: 50% 20px; /* 关键：确保上下有足够留白实现居中 */
+    gap: 22px;
+    padding: 50% 12%;
 }
 
 .lyric-line {
-    font-family: var(--font-main);
-    font-size: 1rem; /* 非活跃行大小 */
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.3); /* 你的 dimmed 颜色 */
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    transition: all 0.4s cubic-bezier(0.2, 0, 0.2, 1);
     margin: 0;
     cursor: pointer;
+    line-height: 1.3;
 }
 
-/* 播放中的状态 */
 .lyric-line.active {
-    font-size: 1.2rem;
-    color: #ffffff;
+    font-size: 1.35rem;
+    opacity: 1;
     transform: scale(1.05);
-    text-shadow: 0 0 15px var(--text-glow);
+    text-shadow: 0 0 20px var(--text-glow, rgba(255,255,255,0.3));
 }
 
-/* 手动滚动时，中间那行的状态 */
 .lyric-line.highlight {
-    color: rgba(255, 255, 255, 0.9);
+    opacity: 1;
     transform: scale(1.02);
 }
 
 .lyric-line.dimmed {
-    /* 统一非焦点行的透明度 */
     opacity: 0.3;
 }
 
-/* --- 手动滚动时间指示器 --- */
 .seek-indicator {
     position: absolute;
     top: 50%;
     left: 0;
     width: 100%;
+    height: 30px;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 0 20px;
+    box-sizing: border-box;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 10;
+    transition: opacity 0.3s ease;
+    z-index: 100;
 }
 
 .seek-indicator.show {
     opacity: 1;
 }
 
-.seek-indicator .line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2) 20%,
-    rgba(255, 255, 255, 0.2) 80%,
-    transparent
-    );
-    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+.seek-time {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 45px;
 }
 
-.seek-indicator .time-box {
-    margin: 0 15px;
-    font-family: monospace;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.5);
-    background: rgba(0, 0, 0, 0.3);
-    padding: 2px 8px;
-    border-radius: 4px;
-    backdrop-filter: blur(4px);
+.seek-line {
+    flex: 1;
+    height: 0;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    margin: 0 12px;
+}
+
+.seek-play {
+    color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    transition: all 0.2s;
+    background: none;
+}
+
+.seek-indicator.show .seek-play {
+    pointer-events: auto;
+    cursor: pointer;
+}
+.seek-play:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 </style>

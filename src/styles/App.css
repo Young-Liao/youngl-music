@@ -9,8 +9,8 @@
 
     --accent-secondary: #5e16d4; /* Deep violet */
 
-    --font-main: 'Inter', sans-serif;
-    --font-mono: 'Geist Mono', monospace;
+    --font-main: "SF Pro Display", "Inter", "Montserrat", "PingFang SC", sans-serif;
+    --font-mono: "JetBrains Mono", "SF Mono", "Menlo", monospace;
 }
 
 body {
