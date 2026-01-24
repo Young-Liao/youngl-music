@@ -65,6 +65,8 @@ export const resetStates = async () => {
         totalDuration: 0,
     };
     await checkAudioAvailability('playlist', true);
+    await syncSystemMetadata();
+    await syncPlaybackStatus();
 }
 
 const getFromFile = async () => {

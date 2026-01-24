@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 use base64::Engine;
 use base64::engine::general_purpose;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State, Url};
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig, MediaPlayback, MediaPosition};
 use crate::utils::song::AudioState;
 
@@ -40,7 +40,7 @@ pub async fn update_system_metadata(
         let hwnd = None;
 
         let config = PlatformConfig {
-            dbus_name: "youngl_music_v3", // 每次改代码建议微调名字，强制 Windows 刷新
+            dbus_name: "com.young.youngl-music", // 每次改代码建议微调名字，强制 Windows 刷新
             display_name: "YoungL Music",
             hwnd,
         };
@@ -62,36 +62,44 @@ pub async fn update_system_metadata(
         *control_slot = Some(c);
     }
 
-    // 2. 转换 Base64 为本地文件路径 (关键逻辑)
+    // 2. 转换 Base64 为本地文件路径
     let mut local_cover_url = None;
     if let Some(base64_str) = cover {
-        // 过滤前缀 data:image/...;base64,
         let base64_data = base64_str.split(',').last().unwrap_or(&base64_str);
 
         if let Ok(bytes) = general_purpose::STANDARD.decode(base64_data) {
-            if let Ok(cache_dir) = app.path().app_cache_dir() {
-                let cover_path = cache_dir.join("current_cover.jpg");
-                let _ = fs::remove_file(&cover_path); // 确保旧图被替换
-                if fs::write(&cover_path, bytes).is_ok() {
-                    // Windows 必须使用 file:/// 协议，斜杠需统一为正斜杠
-                    let path_str = cover_path.to_string_lossy().replace("\\", "/");
-                    local_cover_url = Some(format!("file:///{}", path_str));
-                }
+            // 【优化】尝试使用系统临时目录，路径更短，减少超限风险
+            let temp_path = std::env::temp_dir().join("yt_music_cover.jpg");
+
+            // 确保旧文件被删除并写入新文件
+            let _ = fs::remove_file(&temp_path);
+            if fs::write(&temp_path, bytes).is_ok() {
+                local_cover_url = Some(String::from(temp_path.to_str().unwrap().to_string()));
             }
         }
     }
 
-    println!("Len: {}", local_cover_url.as_deref().unwrap().len());
-    // 3. 提交元数据 (这里是之前报错的源头！)
+    // 3. 提交元数据
     if let Some(ref mut controls) = *control_slot {
+        let cover_ptr = local_cover_url.as_deref();
+
+        // 打印出来检查，确保没有 \\?\ 这种前缀
+        if let Some(path) = cover_ptr {
+            println!("Setting system cover path: {}", path);
+        }
+
         controls.set_metadata(MediaMetadata {
             title: Some(&title),
             artist: Some(&artist),
             album: Some(&album),
-            // ✅ 注意！这里必须用 local_cover_url，而不是原始的 cover 变量
             cover_url: local_cover_url.as_deref(),
             duration: None,
-        }).map_err(|e| format!("Windows API Error: {:?}", e))?;
+        }).map_err(|e| {
+            let err_msg = format!("{:?}", e);
+            // 如果还是报错，尝试不带封面发送，至少保证程序不崩
+            eprintln!("Metadata failed: {}", err_msg);
+            err_msg
+        })?;
     }
 
     Ok(())

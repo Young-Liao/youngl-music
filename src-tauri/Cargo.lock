@@ -5905,6 +5905,7 @@ dependencies = [
  "tauri-plugin-media",
  "tauri-plugin-opener",
  "walkdir",
+ "windows 0.54.0",
 ]
 
 [[package]]

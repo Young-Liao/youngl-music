@@ -11,6 +11,12 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(|app| {
+            #[cfg(target_os = "windows")]
+            {
+                let identifier = app.config().identifier.clone();
+                // 强制 Windows 将此进程与标识符关联
+                let _ = utils::ta_win_util::set_aumid(&identifier);
+            }
             // 仅注册空状态，不执行任何 souvlaki 初始化
             app.manage(PlayerControls(Mutex::new(None)));
             Ok(())

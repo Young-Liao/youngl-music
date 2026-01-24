@@ -32,3 +32,4 @@ lazy_static = "1.5.0" # To encode the image for the web
 regex = "1.12.2"
 tauri-plugin-media = "0.1.1"
 souvlaki = "0.7"
+windows = "0.54.0"
