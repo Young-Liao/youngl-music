@@ -1,5 +1,5 @@
 import {invoke} from "@tauri-apps/api/core"
-import {currentTime} from "../globals.ts";
+import {currentMetadata, currentTime} from "../globals.ts";
 import {syncPlaybackStatus} from "../utils/system-api.ts";
 
 export let progressController: number | null = null;
@@ -31,4 +31,12 @@ export const setPosition = async (time: number) => {
     } catch (e) {
         console.log("Failed to set position: ", e);
     }
+}
+
+export const seekForward = async (time: number) => {
+    await setPosition(Math.min(currentTime.value + time, currentMetadata.value.totalDuration));
+}
+
+export const seekBackward = async (time: number) => {
+    await setPosition(Math.max(currentTime.value - time, 0));
 }

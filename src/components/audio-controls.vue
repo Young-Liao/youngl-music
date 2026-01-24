@@ -1,20 +1,10 @@
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import {isPaused, playbackHistory, playbackMode, playlist, volume} from "../scripts/globals";
 import {skipEnd, skipStart, toggleAudioPlayback} from "../scripts/playback/audio-playback.ts";
-
-const lastVolume = ref(volume.value || 80); // Store volume for unmuting
+import {toggleMute} from "../scripts/controls/volume.ts";
 
 const toggleMode = () => playbackMode.value = (playbackMode.value + 1) % 3;
-
-const toggleMute = () => {
-    if (volume.value > 0) {
-        lastVolume.value = volume.value;
-        volume.value = 0;
-    } else {
-        volume.value = lastVolume.value || 80;
-    }
-};
 
 const modeIcon = computed(() => {
     switch (playbackMode.value) {

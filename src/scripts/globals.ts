@@ -9,6 +9,7 @@ export const themes = ['theme-sunset', 'theme-ocean', 'theme-midnight', 'theme-g
 export const lockCurrentTime = ref(false);
 
 /// States
+export const isPlaylistOpen = ref(false);
 export const currentTheme = ref('theme-sunset');
 export const isPaused = ref(true);
 export const currentTime = ref(0);
@@ -20,6 +21,8 @@ export const playbackHistory = ref<string[]>([]);
 export const playbackMode = ref<PlaybackMode>(PlaybackMode.RepeatAll);
 export const playlist = ref<string[]>([]); // The new global playlist
 export const currentIndex = ref(-1);
+
+export const openedDialog = ref(false);
 
 /// Data
 export const currentMetadata = ref<SongMetadata>({

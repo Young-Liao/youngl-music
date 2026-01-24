@@ -1,9 +1,11 @@
 import {open} from "@tauri-apps/plugin-dialog";
 import {emit} from "@tauri-apps/api/event";
 import {getValidLastFileFromHistory} from "./playback-history.ts";
+import {openedDialog} from "../globals.ts";
 
 /// This function uses a dialog to select an audio file.
 export const selectAudio = async () => {
+    openedDialog.value = true;
     return await open({
         multiple: true,
         filters: [{

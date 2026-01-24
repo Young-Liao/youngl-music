@@ -1,17 +1,21 @@
 <!-- src/App.vue -->
 <script setup lang="ts">
-import {ref} from "vue";
+import {onUnmounted} from "vue";
 import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
-import {currentTheme} from "./scripts/globals.ts";
-import { onMounted } from 'vue';
-import { initSystemMediaListeners } from './scripts/utils/system-api';
-
-const isPlaylistOpen = ref(false);
+import {currentTheme, isPlaylistOpen} from "./scripts/globals.ts";
+import {onMounted} from 'vue';
+import {initSystemMediaListeners} from './scripts/utils/system-api';
+import {destroyKeyboardEventHandler, initKeyboardEventHandler} from "./scripts/utils/keyboard-events.ts";
 
 onMounted(() => {
     initSystemMediaListeners();
+    initKeyboardEventHandler()
 });
+
+onUnmounted(() => {
+    destroyKeyboardEventHandler();
+})
 
 </script>
 

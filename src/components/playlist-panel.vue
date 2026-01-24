@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {playlist, currentIndex, isPaused, currentMetadata} from "../scripts/globals";
 import { handleSelectionNeeded } from "../scripts/files/file-selection.ts";
-import { onMounted, ref, watch } from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 import { emit, listen } from "@tauri-apps/api/event";
 import { addToPlayList, shuffle } from "../scripts/files/playlist.ts";
 import { invoke } from "@tauri-apps/api/core";
@@ -64,9 +64,15 @@ const shufflePlaylist = () => {
     currentIndex.value = playlist.value.findIndex((item) => item == originPlay);
 };
 
-const deleteSelected = () => {
+const deleteSelected = async () => {
     let current = playlist.value[currentIndex.value];
+
+    // 添加确认弹窗
+    const confirmed = await confirm(`Are your sure to remove ${selectedPaths.value.size} song${selectedPaths.value.size > 1 ? 's' : ''} from the playlist?`);
+    if (!confirmed) return;
+
     playlist.value = playlist.value.filter(path => !selectedPaths.value.has(path));
+
     if (selectedPaths.value.has(current)) {
         invoke('stop_song').then(resetStates);
     } else {
@@ -75,6 +81,14 @@ const deleteSelected = () => {
     selectedPaths.value.clear();
     isSelectMode.value = false;
     refreshData();
+};
+
+const toggleSelectAll = () => {
+    if (selectedPaths.value.size === audioList.value.length) {
+        selectedPaths.value.clear();
+    } else {
+        audioList.value.forEach(song => selectedPaths.value.add(song.path));
+    }
 };
 
 const refreshData = async () => {
@@ -93,6 +107,101 @@ const refreshData = async () => {
     } catch (e) { console.error(e); }
     finally { isFetching.value = false; }
 }
+
+// --- New: Keyboard Focus State ---
+const activeIndex = ref(-1);
+
+/**
+ * Helper: Scrolls the focused item into view
+ * 'block: center' ensures it is visible and positioned comfortably
+ */
+const scrollToItem = (idx: number) => {
+    if (idx < 0) return;
+
+    // Use nextTick or setTimeout to ensure DOM is ready after state changes
+    setTimeout(() => {
+        const container = document.querySelector('.sidebar-content');
+        const items = document.querySelectorAll('.song-item');
+        const target = items[idx] as HTMLElement;
+
+        if (target && container) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }, 0);
+};
+
+/**
+ * Centralized Keyboard Handler for the Playlist
+ */
+const handlePlaylistKeyDown = async (e: KeyboardEvent) => {
+    if (!props.isOpen) return;
+
+    // Prevent navigation if the user is typing in an input (e.g., a search bar)
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+    switch (e.key) {
+        case 'ArrowUp':
+            e.preventDefault();
+            if (activeIndex.value > 0) {
+                activeIndex.value--;
+                scrollToItem(activeIndex.value);
+            }
+            break;
+
+        case 'ArrowDown':
+            e.preventDefault();
+            if (activeIndex.value < audioList.value.length - 1) {
+                activeIndex.value++;
+                scrollToItem(activeIndex.value);
+            }
+            break;
+
+        case 'Enter':
+            e.preventDefault();
+            if (activeIndex.value !== -1) {
+                const song = audioList.value[activeIndex.value];
+
+                // Logic branch: Toggle selection if in Select Mode, else play
+                if (isSelectMode.value) {
+                    if (selectedPaths.value.has(song.path)) {
+                        selectedPaths.value.delete(song.path);
+                    } else {
+                        selectedPaths.value.add(song.path);
+                    }
+                } else {
+                    handleItemClick(song, activeIndex.value);
+                }
+            }
+            break;
+
+        case 'Escape':
+            if (isSelectMode.value) {
+                toggleSelectMode();
+            } else {
+                emit('close');
+            }
+            break;
+    }
+};
+
+// Toggle event listeners based on whether the sidebar is open
+watch(() => props.isOpen, (newVal) => {
+    if (newVal) {
+        // Sync visual pointer with current playing song on open
+        activeIndex.value = currentIndex.value;
+        scrollToItem(activeIndex.value);
+        window.addEventListener('keydown', handlePlaylistKeyDown);
+    } else {
+        window.removeEventListener('keydown', handlePlaylistKeyDown);
+    }
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handlePlaylistKeyDown);
+});
 
 onMounted(() => {
     listen('refresh-playlist', () => props.isOpen ? refreshData() : playlistUpdated.value = true);
@@ -121,8 +230,18 @@ watch(() => props.isOpen, (newVal) => {
                     <i class="bi bi-collection-play"></i>
                     <span>Queue</span>
                 </div>
+
                 <button class="action-icon-btn" @click.stop="toggleSelectMode" :class="{active: isSelectMode}" title="Multi-Select">
-                    <i class="bi bi-check2-all"></i>
+                    <i :class="isSelectMode ? 'bi bi-ui-checks' : 'bi bi-list-check'"></i>
+                </button>
+
+                <button
+                    v-if="isSelectMode && audioList.length > 0"
+                    class="action-icon-btn"
+                    @click.stop="toggleSelectAll"
+                    :title="selectedPaths.size === audioList.length ? 'Deselect All' : 'Select All'"
+                >
+                    <i :class="selectedPaths.size === audioList.length ? 'bi bi-dash-circle-dotted' : 'bi bi-plus-circle-dotted'"></i>
                 </button>
                 <button v-if="playlist.length > 1 && !isSelectMode" :class="isFetching ? 'unavailable-button' : ''" class="action-icon-btn" @click.stop="shufflePlaylist" :title="!isFetching ? 'Shuffle' : 'Fetching... Can\'t shuffle'">
                     <i class="bi bi-shuffle"></i>
@@ -150,7 +269,8 @@ watch(() => props.isOpen, (newVal) => {
                         :class="{
                             'is-current': isActive(song.path),
                             'is-playing': isActive(song.path) && !isPaused,
-                            'is-selected': selectedPaths.has(song.path)
+                            'is-selected': selectedPaths.has(song.path),
+                            'is-focused': activeIndex === idx,
                         }"
                         @click.stop="handleItemClick(song, idx)"
                         :style="{ '--i': idx }"

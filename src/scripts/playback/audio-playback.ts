@@ -4,7 +4,7 @@ import {
     currentTime,
     isPaused,
     lockCurrentTime,
-    noAudio,
+    noAudio, openedDialog,
     playbackHistory,
     playbackMode,
     playlist,
@@ -141,11 +141,11 @@ export const checkAudioAvailability = async (priority: string = 'playlist', noHi
 
 /// Call Rust to toggle audio playback.
 export const toggleAudioPlayback = async () => {
-    const origin_no_audio = noAudio.value;
     if (!await checkAudioAvailability()) {
         console.log("Rejected. Not toggling...")
     }
-    if (!noAudio.value && origin_no_audio) {
+    if (openedDialog.value) {
+        openedDialog.value = false;
         console.log("Chose one just now, not toggling...");
         return;
     }

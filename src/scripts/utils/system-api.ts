@@ -6,7 +6,7 @@ import { toggleAudioPlayback, skipEnd, skipStart } from "../playback/audio-playb
 /**
  * 监听系统媒体信号（硬件按键）
  */
-export async function initSystemMediaListeners() {
+export const initSystemMediaListeners = async () => {
     await listen<string>("system-media-event", (event) => {
         const signal = event.payload;
         if (signal === "Toggle") {
@@ -22,7 +22,7 @@ export async function initSystemMediaListeners() {
 /**
  * 更新系统媒体元数据（歌名、作者等）
  */
-export async function syncSystemMetadata() {
+export const syncSystemMetadata = async () => {
     try {
         const meta = currentMetadata.value;
         await invoke("update_system_metadata", {
@@ -39,7 +39,7 @@ export async function syncSystemMetadata() {
 /**
  * 更新播放状态（播放/暂停按钮同步）
  */
-export async function syncPlaybackStatus() {
+export const syncPlaybackStatus = async () => {
     try {
         await invoke("update_system_status", {
             isPaused: isPaused.value,
