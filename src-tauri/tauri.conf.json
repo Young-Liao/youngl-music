@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "YoungL Music",
         "width": 1028,
         "height": 731,

@@ -14,6 +14,7 @@ import {listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
 import {getValidLastFileFromHistory} from "../files/playback-history.ts";
 import {getNextValidAudio, getPrevValidAudio} from "../files/playlist.ts";
+import {syncPlaybackStatus, syncSystemMetadata} from "../utils/system-api.ts";
 
 /// Load the audio after choosing a file.
 export const loadAudio = async (path: unknown) => {

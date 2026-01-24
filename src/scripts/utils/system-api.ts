@@ -1,48 +1,51 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import {currentMetadata, currentTime, isPaused} from "../globals";
 import { toggleAudioPlayback, skipEnd, skipStart } from "../playback/audio-playback";
-import { currentMetadata, isPaused } from "../globals";
 
 /**
- * Initializes listeners for System Media Keys (Fn + Media Keys)
+ * 监听系统媒体信号（硬件按键）
  */
 export async function initSystemMediaListeners() {
-    // Listen for events emitted from Rust when the user interacts
-    // with the Windows Media Overlay or physical keyboard keys
-    await listen("system-media-toggle", () => {
-        toggleAudioPlayback();
-    });
-
-    await listen("system-media-next", () => {
-        skipEnd();
-    });
-
-    await listen("system-media-prev", () => {
-        skipStart();
+    await listen<string>("system-media-event", (event) => {
+        const signal = event.payload;
+        if (signal === "Toggle") {
+            toggleAudioPlayback();
+        } else if (signal === "Next") {
+            skipEnd();
+        } else if (signal === "Previous") {
+            skipStart();
+        }
     });
 }
 
 /**
- * Updates the Windows "Now Playing" flyout
+ * 更新系统媒体元数据（歌名、作者等）
  */
-export async function syncWithSystemMedia() {
-    const meta = currentMetadata.value;
-
-    // Send data to Rust to show in the Taskbar/Sound settings
-    await invoke("update_system_metadata", {
-        title: meta.title || "Unknown",
-        artist: meta.artist || "Unknown Artist",
-        album: meta.album || "Unknown Album",
-        coverUrl: meta.cover || "" // This should be a data URL or local file path
-    });
+export async function syncSystemMetadata() {
+    try {
+        const meta = currentMetadata.value;
+        await invoke("update_system_metadata", {
+            title: meta.title || "Unknown",
+            artist: meta.artist || "Unknown",
+            album: "YoungL Music",
+            cover: meta.cover // 如果你有封面路径，可以在这里传入
+        });
+    } catch (e) {
+        console.error("Sync Metadata Failed:", e);
+    }
 }
 
 /**
- * Updates the Play/Pause button state in the Windows Overlay
+ * 更新播放状态（播放/暂停按钮同步）
  */
-export async function updatePlaybackState() {
-    // You would tell Rust if the status is "Playing" or "Paused"
-    await invoke("update_system_playback_status", {
-        status: isPaused.value ? "Paused" : "Playing"
-    });
+export async function syncPlaybackStatus() {
+    try {
+        await invoke("update_system_status", {
+            isPaused: isPaused.value,
+            progress: currentTime.value,
+        });
+    } catch (e) {
+        console.error("Sync Status Failed:", e);
+    }
 }

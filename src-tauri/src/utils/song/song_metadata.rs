@@ -35,8 +35,11 @@ pub fn get_metadata(path: &String, total_duration: f64) -> AudioMetadata {
         Ok(tag) => {
             let cover_base64 = tag.album_cover().map(|cover| {
                 let b64 = general_purpose::STANDARD.encode(cover.data);
-                // Fix: use display format for mime_type, not Debug {:?}
-                format!("data:{:?};base64,{}", cover.mime_type, b64)
+                let mime = match cover.mime_type {
+                    audiotags::MimeType::Png => "image/png",
+                    _ => "image/jpeg",
+                };
+                format!("data:{};base64,{}", mime, b64)
             });
             AudioMetadata {
                 title: tag.title().map(|s| s.to_string()),

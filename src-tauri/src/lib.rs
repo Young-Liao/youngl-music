@@ -1,14 +1,23 @@
+use std::sync::Mutex;
+use tauri::Manager;
+use crate::utils::system::PlayerControls;
+
 mod utils;
 
+// Define a wrapper for our media controls to be stored in Tauri State
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let (_stream, audio_state) = utils::song::get_audio_state();
 
     tauri::Builder::default()
+        .setup(|app| {
+            // 仅注册空状态，不执行任何 souvlaki 初始化
+            app.manage(PlayerControls(Mutex::new(None)));
+            Ok(())
+        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_media::init())
         .manage(audio_state)
         .invoke_handler(tauri::generate_handler![
             utils::song::load_song,
@@ -19,6 +28,7 @@ pub fn run() {
             utils::song::fetch_metadata,
             utils::system::set_volume,
             utils::system::update_system_metadata,
+            utils::system::update_system_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
