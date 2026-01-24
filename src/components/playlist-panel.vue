@@ -48,6 +48,7 @@ const handleItemClick = async (song: any, idx: number) => {
 
 const shufflePlaylist = () => {
     if (playlist.value.length <= 1) return;
+    if (isFetching.value) return;
 
     let originPlay = playlist.value[currentIndex.value];
 
@@ -123,7 +124,7 @@ watch(() => props.isOpen, (newVal) => {
                 <button class="action-icon-btn" @click.stop="toggleSelectMode" :class="{active: isSelectMode}" title="Multi-Select">
                     <i class="bi bi-check2-all"></i>
                 </button>
-                <button v-if="playlist.length > 1 && !isSelectMode" class="action-icon-btn" @click.stop="shufflePlaylist" title="Shuffle">
+                <button v-if="playlist.length > 1 && !isSelectMode" :class="isFetching ? 'unavailable-button' : ''" class="action-icon-btn" @click.stop="shufflePlaylist" :title="!isFetching ? 'Shuffle' : 'Fetching... Can\'t shuffle'">
                     <i class="bi bi-shuffle"></i>
                 </button>
             </div>
