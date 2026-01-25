@@ -13,7 +13,7 @@ import {startProgressCollection, stopProgressCollection} from "./progress-contro
 import {emit, listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
 import {getValidLastFileFromHistory} from "../files/playback-history.ts";
-import {getNextValidAudio, getPrevValidAudio} from "../files/playlist.ts";
+import {getNextValidAudio, getPrevValidAudio, removeMultipleFromPlaylist} from "../files/playlist.ts";
 import {syncPlaybackStatus, syncSystemMetadata} from "../utils/system-api.ts";
 import {fetchLyricsFromSong} from "./lyrics-handler.ts";
 
@@ -24,39 +24,43 @@ export const loadAudio = async (path: unknown) => {
         console.log("Selection Canceled... Not loading...");
         return false;
     } else {
-        noAudio.value = false;
-        isPaused.value = false;
+        try {
+            const metadata = await invoke<{
+                title: string,
+                artist: string,
+                album: string,
+                cover: string,
+                total_duration: number
+            }>('load_song', {path: path});
+            currentMetadata.value = {
+                title: metadata.title || path.split(/[\\/]/).pop() || "Unknown Title",
+                artist: metadata.artist || "Unknown Artist",
+                cover: metadata.cover, // This is our Base64 string
+                totalDuration: metadata.total_duration,
+            };
 
-        const metadata = await invoke<{
-            title: string,
-            artist: string,
-            album: string,
-            cover: string,
-            total_duration: number
-        }>('load_song', {path: path});
-        currentMetadata.value = {
-            title: metadata.title || path.split(/[\\/]/).pop() || "Unknown Title",
-            artist: metadata.artist || "Unknown Artist",
-            cover: metadata.cover, // This is our Base64 string
-            totalDuration: metadata.total_duration,
-        };
+            if (!lockCurrentTime)
+                currentTime.value = 0;
+            startProgressCollection();
+            if (path !== playbackHistory.value[playbackHistory.value.length - 1])
+                playbackHistory.value.push(path as string);
+            console.log("The song has been loaded.")
 
-        if (!lockCurrentTime)
-            currentTime.value = 0;
-        startProgressCollection();
-        if (path !== playbackHistory.value[playbackHistory.value.length - 1])
-            playbackHistory.value.push(path as string);
-        console.log("The song has been loaded.")
+            await syncSystemMetadata();
+            await syncPlaybackStatus();
+            await fetchLyricsFromSong(path as string);
 
-        await syncSystemMetadata();
-        await syncPlaybackStatus();
-        await fetchLyricsFromSong(path as string);
+            noAudio.value = false;
+            isPaused.value = false;
+            await emit("close-menu");
 
-        await emit("close-menu");
-
-        return true;
+            return true;
+        } catch {
+            removeMultipleFromPlaylist([playlist.value.findIndex((item) => item === path)]);
+            return false;
+        }
     }
-}
+};
 
 /// Reset all the state to no-audio state
 export const resetStates = async () => {

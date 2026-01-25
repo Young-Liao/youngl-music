@@ -6,6 +6,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { addToPlayList, shuffle } from "../scripts/files/playlist.ts";
 import { invoke } from "@tauri-apps/api/core";
 import {loadAudio, resetStates} from "../scripts/playback/audio-playback.ts";
+import {cancelPendingClose} from "../scripts/utils/system-api.ts";
 
 const props = defineProps<{ isOpen: boolean }>();
 defineEmits(['close']);
@@ -38,6 +39,7 @@ const toggleSelectMode = () => {
 };
 
 const handleItemClick = async (song: any, idx: number) => {
+    activeIndex.value = idx;
     if (isSelectMode.value) {
         if (selectedPaths.value.has(song.path)) selectedPaths.value.delete(song.path);
         else selectedPaths.value.add(song.path);
@@ -266,7 +268,9 @@ watch(() => props.isOpen, (newVal) => {
 </script>
 
 <template>
-    <div class="playlist-sidebar" :class="{ 'is-open': isOpen }">
+    <div class="playlist-sidebar" :class="{ 'is-open': isOpen }"
+         @click.stop="cancelPendingClose"
+         @mousedown="cancelPendingClose" >
         <div class="sidebar-header">
             <div class="header-left">
                 <div class="title-section">

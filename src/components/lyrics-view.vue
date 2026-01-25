@@ -2,7 +2,6 @@
 import {ref, watch, nextTick, onUnmounted, onMounted} from 'vue';
 import {currentMetadata, currentTime, isPlaylistOpen} from '../scripts/globals';
 import {setPosition} from "../scripts/playback/progress-controller.ts";
-import {cancelPendingClose} from "../scripts/utils/system-api.ts";
 
 // 定义信号：点击背景时通知父组件
 const emit = defineEmits(['toggle-view']);
@@ -246,9 +245,7 @@ const setPositionThroughLyrics = async () => {
 
 <template>
     <div class="lyrics-view playlist-sidebar"
-         :class="{ 'is-open': isPlaylistOpen }"
-         @click.stop="cancelPendingClose"
-         @mousedown="cancelPendingClose" >
+         :class="{ 'is-open': isPlaylistOpen }" >
         <div class="seek-indicator" :class="{ 'show': isUserScrolling }">
             <div class="seek-time">
                 {{ formatTime(currentMetadata.lyrics?.[userHoverIndex]?.time || 0) }}

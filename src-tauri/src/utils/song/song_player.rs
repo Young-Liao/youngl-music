@@ -57,12 +57,12 @@ pub fn load_song(
     state: State<'_, AudioState>,
     app_handle: AppHandle,
 ) -> Result<AudioMetadata, String> {
+    let sink = state.sink.lock().unwrap();
     let file = File::open(&path).map_err(|e| format!("[ERROR] Failed to open the file: {}", e))?;
     let source = Decoder::try_from(file).map_err(|e| format!("[ERROR] Failed to decode: {}", e))?;
 
     let total_duration = source.total_duration().unwrap().as_secs_f64();
 
-    let sink = state.sink.lock().unwrap();
     sink.stop();
     sink.clear();
     sink.append(source);
@@ -97,7 +97,7 @@ pub fn toggle_playback(state: State<'_, AudioState>) -> Result<bool, String> {
 
     let mut binding = state.is_paused.lock().unwrap();
     let origin_state = binding.get_mut();
-    if *origin_state {
+    if *origin_state && !sink.empty() {
         sink.play();
     } else {
         sink.pause();
