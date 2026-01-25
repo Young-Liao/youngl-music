@@ -1,12 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import {currentMetadata, currentTime, isPaused} from "../globals";
+import {currentIndex, currentMetadata, currentTime, isPaused, playlist} from "../globals";
 import { toggleAudioPlayback, skipEnd, skipStart } from "../playback/audio-playback";
+import {addToPlayList} from "../files/playlist.ts";
 
 /**
  * 监听系统媒体信号（硬件按键）
  */
-export const initSystemMediaListeners = async () => {
+export const initSystemListeners = async () => {
     await listen<string>("system-media-event", (event) => {
         const signal = event.payload;
         if (signal === "Toggle") {
@@ -15,6 +16,15 @@ export const initSystemMediaListeners = async () => {
             skipEnd();
         } else if (signal === "Previous") {
             skipStart();
+        }
+    });
+    await listen<string[]>('open-file', (event) => {
+        const filePaths = event.payload;
+        // payload 是一个数组，通常第一个元素 [0] 是路径
+        if (filePaths.length > 0) {
+            let newIndex = playlist.value.length;
+            addToPlayList(filePaths);
+            currentIndex.value = newIndex;
         }
     });
 }
@@ -49,3 +59,4 @@ export const syncPlaybackStatus = async () => {
         console.error("Sync Status Failed:", e);
     }
 }
+

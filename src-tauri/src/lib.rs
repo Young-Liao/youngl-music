@@ -1,6 +1,6 @@
+use crate::utils::system::PlayerControls;
 use std::sync::Mutex;
 use tauri::Manager;
-use crate::utils::system::PlayerControls;
 
 mod utils;
 
@@ -10,6 +10,14 @@ pub fn run() {
     let (_stream, audio_state) = utils::song::get_audio_state();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // 当第二个实例启动时，args 会包含新的文件路径
+            // 将路径发送给前端播放
+            app.emit("open-file", args).unwrap();
+
+            // 顺便把窗口拉到最前面
+            let _ = app.get_webview_window("main").map(|w| w.set_focus());
+        }))
         .setup(|app| {
             #[cfg(target_os = "windows")]
             {

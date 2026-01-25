@@ -10,7 +10,7 @@ import {
     playlist,
 } from "../globals.ts";
 import {startProgressCollection, stopProgressCollection} from "./progress-controller.ts";
-import {listen} from "@tauri-apps/api/event";
+import {emit, listen} from "@tauri-apps/api/event";
 import {handleFileNeeded} from "../files/file-selection.ts";
 import {getValidLastFileFromHistory} from "../files/playback-history.ts";
 import {getNextValidAudio, getPrevValidAudio} from "../files/playlist.ts";
@@ -51,6 +51,8 @@ export const loadAudio = async (path: unknown) => {
         await syncSystemMetadata();
         await syncPlaybackStatus();
         await fetchLyricsFromSong(path as string);
+
+        await emit("close-menu");
 
         return true;
     }

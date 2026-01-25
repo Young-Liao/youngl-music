@@ -34,7 +34,6 @@
           "path": "**"
         }
       ]
-    },
-    "media:default"
+    }
   ]
 }

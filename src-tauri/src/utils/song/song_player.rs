@@ -1,13 +1,13 @@
-use std::collections::HashMap;
+use crate::utils::song::song_metadata;
+use crate::utils::song::song_metadata::AudioMetadata;
+use lazy_static::lazy_static;
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
+use std::collections::HashMap;
 use std::fs::File;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, State};
-use lazy_static::lazy_static;
-use crate::utils::song::song_metadata;
-use crate::utils::song::song_metadata::AudioMetadata;
 
 pub struct AudioState {
     pub(crate) sink: Arc<Mutex<Sink>>,
@@ -135,4 +135,3 @@ pub fn set_position(time: f64, state: State<'_, AudioState>) -> Result<(), Strin
 
     Ok(())
 }
-

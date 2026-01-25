@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::sync::Mutex;
 use audiotags::{AudioTagEdit, Tag};
 use base64::engine::general_purpose;
 use base64::Engine;
 use lazy_static::lazy_static;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 #[derive(serde::Serialize, Clone)]
 pub struct AudioMetadata {

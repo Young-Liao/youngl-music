@@ -8,3 +8,14 @@ An app to play music. Yeah.
 - [2026.1.14] up, and if the user drags when the audio is over, IT GOES WRONG. [FIXED 2026.1.16]
 - [2026.1.16] it flashes after dragging. (progress bar)
 - [2026.1.18] Context Menu goes wrong.
+- [TODO] Close the list when the playback starts.
+- [TODO] Close the list when NOT clicking the list.
+- [TODO] Direct play.
+
+## Android
+```ps
+$env:TAURI_ANDROID_KEYSTORE_PATH = "my-release-key.keystore"
+$env:TAURI_ANDROID_KEYSTORE_PASSWORD = "..."
+$env:TAURI_ANDROID_KEY_ALIAS = "youngl-key"
+$env:TAURI_ANDROID_KEY_PASSWORD = "..."
+```

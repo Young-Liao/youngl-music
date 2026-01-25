@@ -1,6 +1,6 @@
+use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
-use regex::Regex;
 
 fn main() -> std::io::Result<()> {
     let markdown_file = "output.md";
@@ -16,8 +16,7 @@ fn main() -> std::io::Result<()> {
     }
 
     // 3. Read and Parse the Markdown
-    let content = fs::read_to_string(markdown_file)
-        .expect("Error: 'output.md' not found.");
+    let content = fs::read_to_string(markdown_file).expect("Error: 'output.md' not found.");
 
     // Regex to capture: ## File: "path" and the code block
     let re = Regex::new(r##"(?m)^## File: "(.+?)"\s+^```\w*\r?\n([\s\S]+?)\r?\n^```"##).unwrap();

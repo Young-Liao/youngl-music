@@ -1,12 +1,12 @@
-use std::path::Path;
-use std::collections::HashMap;
-use std::io::BufRead;
-use std::sync::Mutex;
 use audiotags::Tag;
 use base64::{engine::general_purpose, Engine as _};
 use id3::{Tag as Id3Tag, TagLike};
-use metaflac::Tag as FlacTag;
 use lazy_static::lazy_static;
+use metaflac::Tag as FlacTag;
+use std::collections::HashMap;
+use std::io::BufRead;
+use std::path::Path;
+use std::sync::Mutex;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -61,7 +61,11 @@ pub fn load_lyrics_from_str(content: String) -> Vec<LyricLine> {
             }
         }
     }
-    lyrics.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap_or(std::cmp::Ordering::Equal));
+    lyrics.sort_by(|a, b| {
+        a.time
+            .partial_cmp(&b.time)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     lyrics
 }
 
@@ -69,7 +73,9 @@ pub fn load_lyrics_from_str(content: String) -> Vec<LyricLine> {
 #[tauri::command]
 pub fn load_lyrics_from_lrc(path: &str) -> Option<Vec<LyricLine>> {
     let lrc_path = Path::new(path).with_extension("lrc");
-    std::fs::read_to_string(lrc_path).ok().map(load_lyrics_from_str)
+    std::fs::read_to_string(lrc_path)
+        .ok()
+        .map(load_lyrics_from_str)
 }
 
 /// TIER 3: Load from embedded file tags (MP3/FLAC/M4A/OGG)
@@ -81,24 +87,26 @@ pub fn load_lyrics_from_song(path: &str) -> Option<Vec<LyricLine>> {
     match ext.as_str() {
         "mp3" => {
             tag = Id3Tag::read_from_path(path).ok()?;
-            tag.lyrics().next().map(|l| load_lyrics_from_str(l.text.clone()))
-        },
+            tag.lyrics()
+                .next()
+                .map(|l| load_lyrics_from_str(l.text.clone()))
+        }
         "flac" => {
             let tag = FlacTag::read_from_path(path).ok()?;
             tag.vorbis_comments()?
                 .get("LYRICS")
                 .and_then(|v| v.first())
                 .map(|s| load_lyrics_from_str(s.clone()))
-        },
+        }
         "m4a" | "mp4" => {
             let tag = mp4ameta::Tag::read_from_path(path).ok()?;
             tag.lyrics().map(|s| load_lyrics_from_str(s.to_string()))
-        },
+        }
         "ogg" => {
             // Ogg Vorbis doesn't have a dedicated high-level crate as simple as the others,
             // so we attempt a raw read via a secondary check or return None for sidecar fallback.
             None
-        },
+        }
         _ => None,
     }
 }

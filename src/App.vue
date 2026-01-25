@@ -5,13 +5,22 @@ import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
 import {currentTheme, isPlaylistOpen} from "./scripts/globals.ts";
 import {onMounted} from 'vue';
-import {initSystemMediaListeners} from './scripts/utils/system-api';
+import {initSystemListeners} from './scripts/utils/system-api';
 import {destroyKeyboardEventHandler, initKeyboardEventHandler} from "./scripts/utils/keyboard-events.ts";
+import {listen} from "@tauri-apps/api/event";
 
 onMounted(() => {
-    initSystemMediaListeners();
+    initSystemListeners();
     initKeyboardEventHandler()
 });
+
+onMounted(async () => {
+    await listen("close-menu", () => {
+        setTimeout(() => {
+            isPlaylistOpen.value = false;
+        }, 1000);
+    })
+})
 
 onUnmounted(() => {
     destroyKeyboardEventHandler();

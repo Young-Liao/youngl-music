@@ -9,7 +9,10 @@ pub mod ta_win_util {
         use windows::core::PCWSTR;
         use windows::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
 
-        let wide_id: Vec<u16> = OsStr::new(id).encode_wide().chain(std::iter::once(0)).collect();
+        let wide_id: Vec<u16> = OsStr::new(id)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
         unsafe {
             SetCurrentProcessExplicitAppUserModelID(PCWSTR(wide_id.as_ptr()))
                 .map_err(|e| e.to_string())

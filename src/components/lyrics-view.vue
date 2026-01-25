@@ -72,16 +72,13 @@ const onScroll = () => {
     // 4. 重置超时计时器（“看门狗”机制）
     clearTimeout(scrollTimeout);
 
-    // 5. 设置停止检测：如果 0.8秒 内没有新的 scroll 事件，视为操作结束
+    // 5. 设置停止检测：如果 1.5秒 内没有新的 scroll 事件，视为操作结束
     scrollTimeout = setTimeout(async () => {
-        const selectedTime = currentMetadata.value?.lyrics?.[userHoverIndex.value]?.time;
-        await setPosition(selectedTime as number);
-
         // 操作结束后，平滑归位到当前播放行
         scrollToActiveLine();
         isUserScrolling.value = false;
         userHoverIndex.value = -1;
-    }, 800);
+    }, 1500);
 };
 
 // --- 用户开始交互（触摸/滚轮） ---
@@ -234,6 +231,11 @@ onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
 
+const setPositionThroughLyrics = async () => {
+    const selectedTime = currentMetadata.value?.lyrics?.[userHoverIndex.value]?.time;
+    await setPosition(selectedTime as number);
+}
+
 </script>
 
 <template>
@@ -244,7 +246,7 @@ onUnmounted(() => {
             </div>
             <div class="seek-line"></div>
             <div class="seek-play">
-                <i class="bi bi-play-circle-fill"></i>
+                <i class="bi bi-play-circle-fill" @click.stop="setPositionThroughLyrics"></i>
             </div>
         </div>
 
