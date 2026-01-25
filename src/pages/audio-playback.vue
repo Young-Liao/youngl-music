@@ -27,10 +27,8 @@ const unlockView = () => {
 
 // Updated logic: Wide mode is strictly for layout, not mobile toggle state
 const checkWindowSize = () => {
-    lockView();
     isWide.value = window.innerWidth > 750;
     if (isWide.value) showLyricsMobile.value = false;
-    unlockView();
 };
 
 const randomizeTheme = () => {
@@ -55,6 +53,10 @@ onUnmounted(() => window.removeEventListener('resize', checkWindowSize));
 
 const toggleMobileView = () => {
     if (!isWide.value) showLyricsMobile.value = !showLyricsMobile.value;
+    if (showLyricsMobile.value) {
+        lyricsViewRef1.value?.scrollToActiveLine();
+        lyricsViewRef2.value?.scrollToActiveLine();
+    }
 };
 </script>
 

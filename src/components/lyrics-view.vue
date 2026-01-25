@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watch, nextTick, onUnmounted} from 'vue';
+import {ref, watch, nextTick, onUnmounted, onMounted} from 'vue';
 import {currentMetadata, currentTime} from '../scripts/globals';
 import {setPosition} from "../scripts/playback/progress-controller.ts";
 
@@ -13,6 +13,8 @@ const lyricElements = ref<HTMLElement[]>([]);
 const activeIndex = ref(-1);       // 当前播放进度对应的歌词索引
 const userHoverIndex = ref(-1);    // 用户划动时，屏幕中心对准的歌词索引
 const isUserScrolling = ref(false); // 标记：用户是否正在交互
+const isResizing = ref(false);
+let resizeTimer: any = null;
 
 // 内部控制变量
 let scrollTimeout: any = null;     // 用于检测滚动停止的计时器
@@ -26,8 +28,6 @@ const setAutoScrollLock = (value: boolean) => {
         isUserScrolling.value = false;
     }
 };
-
-defineExpose({setAutoScrollLock});
 
 // --- 辅助：计算屏幕中心对应的歌词行 ---
 const calculateCenterLine = () => {
@@ -61,7 +61,7 @@ const formatTime = (seconds: number) => {
 // --- 核心：处理滚动事件 ---
 const onScroll = () => {
     // 1. 如果当前是由代码触发的自动滚动，直接忽略，不视为用户操作
-    if (isAutoScrolling) return;
+    if (isAutoScrolling || isResizing.value) return;
 
     // 2. 标记为用户正在滚动
     isUserScrolling.value = true;
@@ -203,6 +203,36 @@ const handleInteractionEnd = (e: TouchEvent | MouseEvent) => {
         userHoverIndex.value = -1;
     }
 };
+
+defineExpose({setAutoScrollLock, scrollToActiveLine});
+
+// LyricsView.vue
+
+const handleResize = () => {
+    // 1. 开启 Resize 锁
+    isResizing.value = true;
+
+    // 2. 如果 Resize 期间正在进行自动滚动动画，立即停止
+    if (autoScrollFrame) cancelAnimationFrame(autoScrollFrame);
+    isAutoScrolling = false;
+
+    // 3. 防抖处理：窗口停止变动 200ms 后才解锁
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        isResizing.value = false;
+        // 4. 解锁后，重新将当前歌词对齐到中心
+        scrollToActiveLine();
+    }, 200);
+};
+
+// 在 onMounted 中绑定，onUnmounted 中销毁
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 
 </script>
 
