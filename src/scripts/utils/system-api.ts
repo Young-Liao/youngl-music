@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import {emit, listen} from "@tauri-apps/api/event";
 import {currentIndex, currentMetadata, currentTime, isPaused, playlist} from "../globals";
-import { toggleAudioPlayback, skipEnd, skipStart } from "../playback/audio-playback";
+import {toggleAudioPlayback, skipEnd, skipStart, resetStates} from "../playback/audio-playback";
 import {addToPlayList} from "../files/playlist.ts";
 
 /**
@@ -24,7 +24,9 @@ export const initSystemListeners = async () => {
         if (filePaths.length > 0) {
             let newIndex = playlist.value.length;
             addToPlayList(filePaths);
-            currentIndex.value = newIndex;
+            currentIndex.value = newIndex - 1;
+            resetStates();
+            emit("open-menu");
         }
     });
 }

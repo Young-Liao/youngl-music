@@ -12,6 +12,9 @@
     --pointer-border: #818cf8;
     --pointer-glow: rgba(129, 140, 248, 0.4);
     --pointer-bg: rgba(129, 140, 248, 0.15);
+
+    --new-item-accent: #34d399; /* 翡翠绿 */
+    --new-item-subtle: rgba(52, 211, 153, 0.08);
 }
 
 .theme-ocean {
@@ -24,6 +27,9 @@
     --pointer-border: #22d3ee;
     --pointer-glow: rgba(34, 211, 238, 0.4);
     --pointer-bg: rgba(34, 211, 238, 0.15);
+
+    --new-item-accent: #fb923c; /* 暖橙 */
+    --new-item-subtle: rgba(251, 146, 60, 0.08);
 }
 
 .theme-midnight {
@@ -36,6 +42,9 @@
     --pointer-border: #a855f7;
     --pointer-glow: rgba(168, 85, 247, 0.5);
     --pointer-bg: rgba(168, 85, 247, 0.2);
+
+    --new-item-accent: #f472b6; /* 柔粉 */
+    --new-item-subtle: rgba(244, 114, 182, 0.08);
 }
 
 .theme-gold {
@@ -48,4 +57,7 @@
     --pointer-border: #fbbf24;
     --pointer-glow: rgba(251, 191, 36, 0.4);
     --pointer-bg: rgba(251, 191, 36, 0.15);
+
+    --new-item-accent: #38bdf8; /* 天蓝 */
+    --new-item-subtle: rgba(56, 189, 248, 0.08);
 }

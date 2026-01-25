@@ -1,4 +1,4 @@
-import {currentIndex, playbackHistory, playlist} from "../globals.ts";
+import {appendedJustNow, currentIndex, playbackHistory, playlist} from "../globals.ts";
 import {exists} from "@tauri-apps/plugin-fs";
 import {emit} from "@tauri-apps/api/event";
 import {getValidLastFileFromHistory} from "./playback-history.ts";
@@ -29,6 +29,8 @@ export const addToPlayList = (paths: string[]) => {
     if (wasEmpty) {
         currentIndex.value = -1;
     }
+
+    appendedJustNow.value = newUniquePaths;
 
     emit('refresh-playlist').then();
 };

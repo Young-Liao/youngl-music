@@ -1,6 +1,6 @@
 use crate::utils::system::PlayerControls;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 mod utils;
 
@@ -11,12 +11,24 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            let file_args = if args.len() > 1 {
+                args[1..].to_vec()
+            } else {
+                Vec::new()
+            };
             // 当第二个实例启动时，args 会包含新的文件路径
             // 将路径发送给前端播放
-            app.emit("open-file", args).unwrap();
+            app.emit("open-file", file_args).unwrap();
 
             // 顺便把窗口拉到最前面
-            let _ = app.get_webview_window("main").map(|w| w.set_focus());
+            if let Some(window) = app.get_webview_window("main") {
+                // 如果窗口被最小化了，先恢复它
+                let _ = window.unminimize();
+                // 确保窗口是显示状态
+                let _ = window.show();
+                // 强制获取焦点
+                let _ = window.set_focus();
+            }
         }))
         .setup(|app| {
             #[cfg(target_os = "windows")]

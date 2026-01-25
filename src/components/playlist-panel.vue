@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {playlist, currentIndex, isPaused, currentMetadata} from "../scripts/globals";
+import {playlist, currentIndex, isPaused, currentMetadata, appendedJustNow} from "../scripts/globals";
 import { handleSelectionNeeded } from "../scripts/files/file-selection.ts";
-import {onMounted, onUnmounted, ref, watch} from "vue";
+import {nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 import { emit, listen } from "@tauri-apps/api/event";
 import { addToPlayList, shuffle } from "../scripts/files/playlist.ts";
 import { invoke } from "@tauri-apps/api/core";
@@ -16,6 +16,8 @@ const isFetching = ref(false);
 // --- Multi-Select State ---
 const isSelectMode = ref(false);
 const selectedPaths = ref(new Set<string>());
+const highlightIndices = ref(new Set<number>());
+const leavingIndices = ref(new Set<number>());
 
 const audioList = ref<{
     title: string,
@@ -91,6 +93,24 @@ const toggleSelectAll = () => {
     }
 };
 
+const scrollToItem = (idx: number, alignTo: ScrollLogicalPosition = 'center') => {
+    if (idx < 0) return;
+
+    setTimeout(() => {
+        const container = document.querySelector('.sidebar-content');
+        const items = document.querySelectorAll('.song-item');
+        const target = items[idx] as HTMLElement;
+
+        if (target && container) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: alignTo
+            });
+        }
+    }, 50); // 稍微增加一点延时确保渲染
+};
+
+// --- Refresh Logic with Animation Trigger ---
 const refreshData = async () => {
     if (playlist.value.length === 0) {
         audioList.value = [];
@@ -104,34 +124,55 @@ const refreshData = async () => {
             path: playlist.value[index],
             title: item.title || playlist.value[index].split(/[\\/]/).pop() || "Unknown Title"
         }));
+
+        // === Check for Newly Appended Files ===
+        if (appendedJustNow.value.length > 0) {
+            await handleNewFilesEffect();
+        }
+
     } catch (e) { console.error(e); }
     finally { isFetching.value = false; }
 }
 
+// --- Specific Logic for New Files Animation ---
+const handleNewFilesEffect = async () => {
+    const addedCount = appendedJustNow.value.length;
+    const totalCount = audioList.value.length;
+
+    // 计算新文件的起始索引
+    const startIdx = totalCount - addedCount;
+    if (startIdx < 0) return;
+
+    // 1. 标记高亮
+    // 1. 进入高亮
+    highlightIndices.value.clear();
+    leavingIndices.value.clear();
+    for (let i = startIdx; i < totalCount; i++) {
+        highlightIndices.value.add(i);
+    }
+
+    appendedJustNow.value = [];
+    await nextTick();
+    scrollToItem(startIdx > 0 ? startIdx - 1 : 0, 'start');
+
+    // 2. 优雅消失逻辑
+    setTimeout(() => {
+        // 第一阶段：添加“正在离开”类名
+        // 此时 CSS 开始执行 transition (1.2s)
+        highlightIndices.value.forEach(idx => leavingIndices.value.add(idx));
+
+        // 第二阶段：等 CSS 动画彻底走完，再移除所有类名
+        // 这里的 1200ms 必须大于或等于 CSS 中的 transition 时间
+        setTimeout(() => {
+            highlightIndices.value.clear();
+            leavingIndices.value.clear();
+        }, 1200);
+
+    }, 1000); // 1秒后开始退场
+};
+
 // --- New: Keyboard Focus State ---
 const activeIndex = ref(-1);
-
-/**
- * Helper: Scrolls the focused item into view
- * 'block: center' ensures it is visible and positioned comfortably
- */
-const scrollToItem = (idx: number) => {
-    if (idx < 0) return;
-
-    // Use nextTick or setTimeout to ensure DOM is ready after state changes
-    setTimeout(() => {
-        const container = document.querySelector('.sidebar-content');
-        const items = document.querySelectorAll('.song-item');
-        const target = items[idx] as HTMLElement;
-
-        if (target && container) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        }
-    }, 0);
-};
 
 /**
  * Centralized Keyboard Handler for the Playlist
@@ -147,12 +188,16 @@ const handlePlaylistKeyDown = async (e: KeyboardEvent) => {
             e.preventDefault();
             activeIndex.value -= 1;
             activeIndex.value %= audioList.value.length;
+            activeIndex.value += audioList.value.length;
+            activeIndex.value %= audioList.value.length;
             scrollToItem(activeIndex.value);
             break;
 
         case 'ArrowDown':
             e.preventDefault();
-            activeIndex.value -= 1;
+            activeIndex.value += 1;
+            activeIndex.value %= audioList.value.length;
+            activeIndex.value += audioList.value.length;
             activeIndex.value %= audioList.value.length;
             scrollToItem(activeIndex.value);
             break;
@@ -269,6 +314,8 @@ watch(() => props.isOpen, (newVal) => {
                             'is-playing': isActive(song.path) && !isPaused,
                             'is-selected': selectedPaths.has(song.path),
                             'is-focused': activeIndex === idx,
+                            'is-just-added': highlightIndices.has(idx),
+                            'is-added-leaving': leavingIndices.has(idx),
                         }"
                         @click.stop="handleItemClick(song, idx)"
                         :style="{ '--i': idx }"

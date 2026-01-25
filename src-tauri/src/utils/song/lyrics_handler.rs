@@ -30,11 +30,13 @@ lazy_static! {
     static ref METADATA_CACHE: Mutex<HashMap<String, AudioMetadata>> = Mutex::new(HashMap::new());
 }
 
-/// TIER 1: Parse raw LRC string into structured data
 pub fn load_lyrics_from_str(content: String) -> Vec<LyricLine> {
-    let mut lyrics = Vec::new();
+    // 1. 使用 HashMap 按时间戳聚合歌词
+    // Key: 时间戳（以毫秒为单位转为整数，避免浮点数精度误差）
+    // Value: 歌词文本
+    let mut lyrics_map: HashMap<i64, String> = HashMap::new();
 
-    // Check if it's plain text (unsynced) or LRC (synced)
+    // 纯文本处理
     if !content.contains('[') {
         return vec![LyricLine {
             time: 0.0,
@@ -45,7 +47,7 @@ pub fn load_lyrics_from_str(content: String) -> Vec<LyricLine> {
     for line in content.lines() {
         if let (Some(start), Some(end)) = (line.find('['), line.find(']')) {
             let time_str = &line[start + 1..end];
-            let text = &line[end + 1..].trim();
+            let text = line[end + 1..].trim();
 
             let parts: Vec<&str> = time_str.split(':').collect();
             if parts.len() >= 2 {
@@ -53,19 +55,41 @@ pub fn load_lyrics_from_str(content: String) -> Vec<LyricLine> {
                 let secs: f64 = parts[1].parse().unwrap_or(-1.0);
 
                 if mins >= 0.0 && secs >= 0.0 {
-                    lyrics.push(LyricLine {
-                        time: mins * 60.0 + secs,
-                        text: text.to_string(),
-                    });
+                    let total_seconds = mins * 60.0 + secs;
+                    // 将时间放大 1000 倍转为整数，解决浮点数作为 Key 的不稳定性
+                    let time_key = (total_seconds * 1000.0).round() as i64;
+
+                    // 如果该时间点已有歌词，则换行追加
+                    lyrics_map
+                        .entry(time_key)
+                        .and_modify(|existing| {
+                            if !text.is_empty() {
+                                existing.push('\n');
+                                existing.push_str(text);
+                            }
+                        })
+                        .or_insert_with(|| text.to_string());
                 }
             }
         }
     }
+
+    // 2. 将 Map 转换为 Vec 并排序
+    let mut lyrics: Vec<LyricLine> = lyrics_map
+        .into_iter()
+        .map(|(time_ms, text)| LyricLine {
+            time: (time_ms as f64) / 1000.0,
+            text,
+        })
+        .collect();
+
+    // 3. 按时间排序
     lyrics.sort_by(|a, b| {
         a.time
             .partial_cmp(&b.time)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
+
     lyrics
 }
 

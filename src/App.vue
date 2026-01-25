@@ -15,10 +15,13 @@ onMounted(() => {
 });
 
 onMounted(async () => {
+    await listen("open-menu", () => {
+        isPlaylistOpen.value = true;
+    })
     await listen("close-menu", () => {
         setTimeout(() => {
             isPlaylistOpen.value = false;
-        }, 1000);
+        }, 3000);
     })
 })
 
