@@ -13,11 +13,24 @@ import {currentTheme, themes} from "../scripts/globals.ts";
 const selected = ref<string | null>(null);
 const isWide = ref(false);
 const showLyricsMobile = ref(false);
+const lyricsViewRef1 = ref(null);
+const lyricsViewRef2 = ref(null);
+
+const lockView = () => {
+    lyricsViewRef1.value?.setAutoScrollLock(true);
+    lyricsViewRef2.value?.setAutoScrollLock(true);
+}
+const unlockView = () => {
+    lyricsViewRef1.value?.setAutoScrollLock(false);
+    lyricsViewRef2.value?.setAutoScrollLock(false);
+}
 
 // Updated logic: Wide mode is strictly for layout, not mobile toggle state
 const checkWindowSize = () => {
+    lockView();
     isWide.value = window.innerWidth > 750;
     if (isWide.value) showLyricsMobile.value = false;
+    unlockView();
 };
 
 const randomizeTheme = () => {
@@ -31,7 +44,11 @@ onMounted(async () => {
     // Random theme on startup
     randomizeTheme();
 
-    await listen('playback-finished', async () => await resetStates());
+    await listen('playback-finished', async () => {
+        lockView();
+        await resetStates()
+        unlockView();
+    });
 });
 
 onUnmounted(() => window.removeEventListener('resize', checkWindowSize));
@@ -59,14 +76,12 @@ const toggleMobileView = () => {
                             <TrackInfo :path="selected" />
                         </div>
 
-                        <div class="lyrics-mobile-container" @click.stop="toggleMobileView"
-                             :class="{'active': !isWide && showLyricsMobile}">
-                            <LyricsView />
-                        </div>
+                        <LyricsView ref="lyricsViewRef1" @toggle-view="toggleMobileView" class="lyrics-mobile-container"
+                                    :class="{'active': !isWide && showLyricsMobile}" />
                     </div>
 
                     <div class="right-pane" :class="{'visible': isWide}">
-                        <LyricsView />
+                        <LyricsView ref="lyricsViewRef2" />
                     </div>
                 </div>
             </div>

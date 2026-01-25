@@ -1,10 +1,9 @@
-/* lyrics-view.css */
 .lyrics-view {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .lyrics-container {
@@ -12,108 +11,109 @@
     height: 100%;
     overflow-y: auto;
     scrollbar-width: none;
-    mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
 }
 
-.lyrics-container::-webkit-scrollbar { display: none; }
-
-.lyrics-wrapper {
-    padding: 50vh 10% 50vh 10%; /* 侧边留出空间给指示器 */
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+.lyrics-container::-webkit-scrollbar {
+    display: none;
 }
 
-/* 基础歌词样式 */
-.lyric-item {
-    font-size: 2.2rem;
-    font-weight: 800;
-    line-height: 1.3;
-    color: white;
-    transition: all 0.5s cubic-bezier(0.33, 1, 0.68, 1);
-    transform-origin: left center;
-    cursor: pointer;
-    filter: blur(0px);
-}
-
-/* 1. 当前播放中的样式：巨大、发光、呼吸 */
-.lyric-item.is-playing {
-    transform: scale(1.15);
-    opacity: 1;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
-    animation: lyric-breathe 3s ease-in-out infinite;
-}
-
-@keyframes lyric-breathe {
-    0%, 100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transform: scale(1.15); }
-    50% { opacity: 0.85; filter: drop-shadow(0 0 20px rgba(255,255,255,0.6)); transform: scale(1.17); }
-}
-
-/* 2. 手动滚动时对准的行：清晰且有背景感 */
-.lyric-item.is-hovered {
-    transform: scale(1.05);
-    opacity: 1;
-}
-
-/* 3. 其它行：变小、变暗、变虚 */
-.lyric-item.is-dimmed {
-    opacity: 0.2;
-    transform: scale(0.85);
-    filter: blur(1.5px);
-}
-
-/* --- 侧边指示器 (iTunes Style) --- */
-.side-seek-bar {
-    position: absolute;
-    right: 30px; /* 放在右侧 */
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 100;
+.lyrics-spacer {
+    /* 确保最后一行能滚动到屏幕中央 */
+    height: 50vh;
+    /* 如果是在固定容器内，可以使用 height: 50%;
+       或者通过 flex-shrink: 0 防止被压缩 */
+    flex-shrink: 0;
     pointer-events: none;
 }
 
-.side-seek-bar.active {
+.lyrics-wrapper {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 50% 12%;
+}
+
+.lyric-line {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    transition: all 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+    margin: 0;
+    cursor: pointer;
+    line-height: 1.3;
+}
+
+.lyric-line.active {
+    font-size: 1.35rem;
+    opacity: 1;
+    transform: scale(1.05);
+    text-shadow: 0 0 20px var(--text-glow, rgba(255, 255, 255, 0.3));
+}
+
+.lyric-line.highlight {
+    opacity: 1;
+    transform: scale(1.02);
+}
+
+.lyric-line.dimmed {
+    opacity: 0.3;
+}
+
+.seek-indicator {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+}
+
+.seek-indicator.show {
     opacity: 1;
 }
 
-.time-tag {
-    font-family: 'Monaco', monospace;
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 4px 10px;
-    border-radius: 6px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
+.seek-time {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 45px;
 }
 
-.indicator-line {
-    width: 40px;
-    height: 1px;
-    background: linear-gradient(to left, white, transparent);
-    border-top: 1px dashed rgba(255,255,255,0.5);
+.seek-line {
+    flex: 1;
+    height: 0;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    margin: 0 12px;
 }
 
-.play-trigger {
-    width: 28px;
-    height: 28px;
-    background: white;
-    color: black;
-    border-radius: 50%;
+.seek-play {
+    color: rgba(255, 255, 255, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    width: 26px;
+    height: 26px;
+    transition: all 0.2s;
+    background: none;
 }
 
-.play-trigger svg {
-    width: 14px;
-    margin-left: 2px;
+.seek-indicator.show .seek-play {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.seek-play:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
