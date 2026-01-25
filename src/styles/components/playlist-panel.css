@@ -130,13 +130,60 @@
     transform: translateX(4px);
 }
 
-.song-idx {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    width: 24px;
+/* 新增：索引列容器，固定宽度并居中 */
+.song-index-column {
+    width: 32px; /* 默认宽度，如果歌曲超过1000首建议设为 40px */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 12px;
     flex-shrink: 0;
-    opacity: 0.5;
+}
+
+/* 覆盖原有的 .song-idx 样式 */
+.song-idx {
+    font-family: var(--font-mono); /* 确保使用等宽字体 */
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    text-align: center;
+    display: block;
+    width: 100%;
+}
+
+/* 播放图标样式 */
+.current-playing-icon {
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 4px var(--text-glow));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 正在播放时的数字逻辑变色 (当图标未显示时) */
+.is-current .song-idx {
+    color: var(--accent-primary);
+    opacity: 1;
+}
+
+/* 简单的淡入淡出过渡，防止图标切换太突兀 */
+.fade-icon-enter-active,
+.fade-icon-leave-active {
+    transition: opacity 0.2s ease;
+}
+.fade-icon-enter-from,
+.fade-icon-leave-to {
+    opacity: 0;
+}
+
+/* 保持你之前定义的图标跳动动画 */
+.is-playing .bi-volume-up-fill {
+    animation: bounce-mini 1.2s infinite ease-in-out;
+}
+@keyframes bounce-mini {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
 }
 
 /* THUMBNAIL STYLES */

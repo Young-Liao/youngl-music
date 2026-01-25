@@ -59,9 +59,9 @@ const formatTime = (seconds: number) => {
 };
 
 const stopUserInteract = () => {
-    scrollToActiveLine();
     isUserScrolling.value = false;
     userHoverIndex.value = -1;
+    scrollToActiveLine();
 }
 
 // --- 核心：处理滚动事件 ---
@@ -236,10 +236,44 @@ onUnmounted(() => {
 });
 
 const setPositionThroughLyrics = async () => {
-    const selectedTime = currentMetadata.value?.lyrics?.[userHoverIndex.value]?.time;
-    await setPosition(selectedTime as number);
-    setTimeout(stopUserInteract, 100);
-}
+    // 1. 立即停止所有动画帧和计时器，防止逻辑冲突
+    if (autoScrollFrame) {
+        cancelAnimationFrame(autoScrollFrame);
+        autoScrollFrame = null;
+    }
+    clearTimeout(scrollTimeout);
+
+    const selectedIndex = userHoverIndex.value;
+    const selectedTime = currentMetadata.value?.lyrics?.[selectedIndex]?.time;
+    if (selectedTime === undefined) return;
+
+    // 2. 核心：强制重置所有状态锁
+    // 必须先设为 true 锁住 onScroll，防止物理滚动触发用户交互判定
+    isAutoScrolling = true;
+    isUserScrolling.value = false;
+
+    // 3. 同步更新索引，确保 watch 里的逻辑不会再次触发
+    activeIndex.value = selectedIndex;
+    currentTime.value = selectedTime;
+
+    // 4. 执行瞬时滚动
+    const container = scrollContainer.value;
+    const activeEl = lyricElements.value[selectedIndex];
+    if (container && activeEl) {
+        const target = activeEl.offsetTop - (container.clientHeight / 2) + (activeEl.clientHeight / 2);
+        container.scrollTop = target;
+    }
+
+    // 5. 设置进度（异步操作）
+    await setPosition(selectedTime);
+
+    // 6. 重点：延迟释放自动滚动锁
+    // 给浏览器一点时间处理刚才那次瞬时滚动产生的 scroll 事件
+    setTimeout(() => {
+        isAutoScrolling = false;
+        userHoverIndex.value = -1;
+    }, 100);
+};
 
 </script>
 
@@ -252,7 +286,7 @@ const setPositionThroughLyrics = async () => {
             </div>
             <div class="seek-line"></div>
             <div class="seek-play">
-                <i class="bi bi-play-circle-fill" @click.stop="setPositionThroughLyrics"></i>
+                <i class="bi bi-play-circle-fill" @click="setPositionThroughLyrics"></i>
             </div>
         </div>
 

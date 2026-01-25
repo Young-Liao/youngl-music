@@ -327,7 +327,18 @@ watch(() => props.isOpen, (newVal) => {
                         <div v-if="isSelectMode" class="select-indicator">
                             <i :class="selectedPaths.has(song.path) ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
                         </div>
-                        <span v-else class="song-idx">{{ (idx + 1).toString().padStart(2, '0') }}</span>
+
+                        <div v-else class="song-index-column">
+                            <transition name="fade-icon" mode="out-in">
+                                <i v-if="isActive(song.path)"
+                                   class="bi current-playing-icon"
+                                   :class="isPaused ? 'bi-pause-fill' : 'bi-play-fill'">
+                                </i>
+                                <span v-else class="song-idx">
+                                    {{ (idx + 1).toString().padStart(audioList.length.toString().length, '0') }}
+                                </span>
+                            </transition>
+                        </div>
 
                         <div class="song-thumb">
                             <img v-if="song.cover" :src="song.cover" class="thumb-img" alt="cover" />
