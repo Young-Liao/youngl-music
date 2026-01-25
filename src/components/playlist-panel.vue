@@ -55,17 +55,20 @@ const shufflePlaylist = () => {
     if (isFetching.value) return;
 
     let originPlay = playlist.value[currentIndex.value];
+    let originPtr = playlist.value[activeIndex.value];
 
     let newPlaylist = [...playlist.value];
     let newAudioList = [...audioList.value];
     shuffle(newPlaylist, newAudioList);
 
     currentIndex.value = -1;
+    activeIndex.value = -1;
 
     playlist.value = newPlaylist;
     audioList.value = newAudioList;
 
     currentIndex.value = playlist.value.findIndex((item) => item == originPlay);
+    activeIndex.value = playlist.value.findIndex((item) => item == originPtr);
 };
 
 const deleteSelected = async () => {

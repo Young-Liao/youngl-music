@@ -22,9 +22,11 @@
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        {
-          "path": "**"
-        }
+        { "path": "$APPDATA/**" },
+        { "path": "$APPLOCALDATA/**" },
+        { "path": "$AUDIO/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" }
       ]
     },
     {
