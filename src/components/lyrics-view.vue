@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {ref, watch, nextTick, onUnmounted, onMounted} from 'vue';
-import {currentMetadata, currentTime} from '../scripts/globals';
+import {currentMetadata, currentTime, isPlaylistOpen} from '../scripts/globals';
 import {setPosition} from "../scripts/playback/progress-controller.ts";
+import {cancelPendingClose} from "../scripts/utils/system-api.ts";
 
 // 定义信号：点击背景时通知父组件
 const emit = defineEmits(['toggle-view']);
@@ -58,6 +59,12 @@ const formatTime = (seconds: number) => {
     return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
+const stopUserInteract = () => {
+    scrollToActiveLine();
+    isUserScrolling.value = false;
+    userHoverIndex.value = -1;
+}
+
 // --- 核心：处理滚动事件 ---
 const onScroll = () => {
     // 1. 如果当前是由代码触发的自动滚动，直接忽略，不视为用户操作
@@ -75,10 +82,8 @@ const onScroll = () => {
     // 5. 设置停止检测：如果 1.5秒 内没有新的 scroll 事件，视为操作结束
     scrollTimeout = setTimeout(async () => {
         // 操作结束后，平滑归位到当前播放行
-        scrollToActiveLine();
-        isUserScrolling.value = false;
-        userHoverIndex.value = -1;
-    }, 1500);
+        stopUserInteract();
+    }, 1000);
 };
 
 // --- 用户开始交互（触摸/滚轮） ---
@@ -201,7 +206,7 @@ const handleInteractionEnd = (e: TouchEvent | MouseEvent) => {
     }
 };
 
-defineExpose({setAutoScrollLock, scrollToActiveLine});
+defineExpose({setAutoScrollLock, scrollToActiveLine, stopUserInteract});
 
 // LyricsView.vue
 
@@ -234,12 +239,16 @@ onUnmounted(() => {
 const setPositionThroughLyrics = async () => {
     const selectedTime = currentMetadata.value?.lyrics?.[userHoverIndex.value]?.time;
     await setPosition(selectedTime as number);
+    setTimeout(stopUserInteract, 100);
 }
 
 </script>
 
 <template>
-    <div class="lyrics-view">
+    <div class="lyrics-view playlist-sidebar"
+         :class="{ 'is-open': isPlaylistOpen }"
+         @click.stop="cancelPendingClose"
+         @mousedown="cancelPendingClose" >
         <div class="seek-indicator" :class="{ 'show': isUserScrolling }">
             <div class="seek-time">
                 {{ formatTime(currentMetadata.lyrics?.[userHoverIndex]?.time || 0) }}
@@ -282,4 +291,4 @@ const setPositionThroughLyrics = async () => {
     </div>
 </template>
 
-<style scoped src="../styles/components/lyrics-view.css" />
+<style scoped src="../styles/components/lyrics-view.css"/>

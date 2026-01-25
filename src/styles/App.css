@@ -25,3 +25,26 @@ body {
 
 /* Scrollbar hiding for internal lists */
 ::-webkit-scrollbar { display: none; }
+
+/* 遮罩层基础样式 */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.2); /* 半透明黑，可根据审美调整 */
+    z-index: 10000;                /* 必须小于 sidebar 的 10001 */
+    cursor: pointer;
+}
+
+/* 遮罩层淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.4s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}

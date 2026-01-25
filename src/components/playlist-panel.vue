@@ -168,7 +168,7 @@ const handleNewFilesEffect = async () => {
             leavingIndices.value.clear();
         }, 1200);
 
-    }, 1000); // 1秒后开始退场
+    }, 1750); // 1.75秒后开始退场
 };
 
 // --- New: Keyboard Focus State ---

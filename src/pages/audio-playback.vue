@@ -54,6 +54,8 @@ onUnmounted(() => window.removeEventListener('resize', checkWindowSize));
 const toggleMobileView = () => {
     if (!isWide.value) showLyricsMobile.value = !showLyricsMobile.value;
     if (showLyricsMobile.value) {
+        lyricsViewRef1.value?.stopUserInteract();
+        lyricsViewRef2.value?.stopUserInteract();
         lyricsViewRef1.value?.scrollToActiveLine();
         lyricsViewRef2.value?.scrollToActiveLine();
     }

@@ -5,6 +5,9 @@ import {PlaybackMode, SongMetadata} from "../types.ts";
 export const callWait = 50; // ms
 export const themes = ['theme-sunset', 'theme-ocean', 'theme-midnight', 'theme-gold'];
 
+// Timers
+export const playlistCloseTimer = ref<number | null>(null);
+
 /// Locks
 export const lockCurrentTime = ref(false);
 

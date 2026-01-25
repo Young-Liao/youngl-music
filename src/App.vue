@@ -3,9 +3,9 @@
 import {onUnmounted} from "vue";
 import AudioPlayback from "./pages/audio-playback.vue";
 import PlaylistPanel from "./components/playlist-panel.vue";
-import {currentTheme, isPlaylistOpen} from "./scripts/globals.ts";
+import {currentTheme, isPlaylistOpen, playlistCloseTimer} from "./scripts/globals.ts";
 import {onMounted} from 'vue';
-import {initSystemListeners} from './scripts/utils/system-api';
+import {cancelPendingClose, initSystemListeners} from './scripts/utils/system-api';
 import {destroyKeyboardEventHandler, initKeyboardEventHandler} from "./scripts/utils/keyboard-events.ts";
 import {listen} from "@tauri-apps/api/event";
 
@@ -16,10 +16,12 @@ onMounted(() => {
 
 onMounted(async () => {
     await listen("open-menu", () => {
+        cancelPendingClose();
         isPlaylistOpen.value = true;
     })
     await listen("close-menu", () => {
-        setTimeout(() => {
+        cancelPendingClose();
+        playlistCloseTimer.value = setTimeout(() => {
             isPlaylistOpen.value = false;
         }, 3000);
     })
@@ -33,8 +35,15 @@ onUnmounted(() => {
 
 <template>
     <div :class="currentTheme">
+        <transition name="fade">
+            <div
+                v-if="isPlaylistOpen"
+                class="sidebar-overlay"
+                @click="isPlaylistOpen = false"
+            ></div>
+        </transition>
         <!-- The Global Playlist Button -->
-        <button class="global-playlist-trigger" @click.stop="isPlaylistOpen = true" title="Open Queue">
+        <button class="global-playlist-trigger" @click.stop="{ cancelPendingClose(); isPlaylistOpen = true; }" title="Open Queue">
             <i class="bi bi-music-note-list"></i>
         </button>
 
