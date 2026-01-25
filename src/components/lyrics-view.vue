@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watch, nextTick, onUnmounted, onMounted} from 'vue';
+import {ref, watch, nextTick, onUnmounted} from 'vue';
 import {currentMetadata, currentTime} from '../scripts/globals';
 import {setPosition} from "../scripts/playback/progress-controller.ts";
 

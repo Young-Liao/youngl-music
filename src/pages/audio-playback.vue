@@ -13,8 +13,8 @@ import {currentTheme, themes} from "../scripts/globals.ts";
 const selected = ref<string | null>(null);
 const isWide = ref(false);
 const showLyricsMobile = ref(false);
-const lyricsViewRef1 = ref(null);
-const lyricsViewRef2 = ref(null);
+const lyricsViewRef1 = ref<InstanceType<typeof LyricsView> | null>(null);
+const lyricsViewRef2 = ref<InstanceType<typeof LyricsView> | null>(null);
 
 const lockView = () => {
     lyricsViewRef1.value?.setAutoScrollLock(true);
